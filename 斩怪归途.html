@@ -1,0 +1,3120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="designer" content="AHANA">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a0f06">
+<title>斩怪归途 1.0</title>
+<link rel="icon" type="image/png" href="build/icon.png">
+<style>
+  html, body {
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
+    background: #1a0f06;
+    overflow: hidden;
+    touch-action: none;
+    overscroll-behavior: none;
+    -webkit-user-select: none; -moz-user-select: none; user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  canvas {
+    display: block;
+    position: fixed;
+    left: 0; top: 0;
+    box-shadow: 0 0 48px rgba(0,0,0,0.9);
+    touch-action: none;
+    -webkit-user-select: none; user-select: none;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+  }
+</style>
+</head>
+<body>
+<canvas id="game" data-design="AHANA" data-credit="Game Design: AHANA" data-version="斩怪归途 1.0"></canvas>
+<script>
+/* ============================================================
+   Game Design: AHANA
+   斩怪归途 1.0
+   All rights reserved. Unauthorized reproduction prohibited.
+   ============================================================ */
+(function () {
+'use strict';
+
+try {
+  console.log('%c Game Design: AHANA ',
+    'color:#fff;background:linear-gradient(90deg,#ed6296,#dc2764);padding:4px 10px;border-radius:4px;font-weight:bold;');
+  console.log('%c 斩怪归途 1.0 ',
+    'color:#ffd23f;background:#4a2a10;padding:4px 10px;border-radius:4px;font-weight:bold;');
+} catch (e) {}
+
+document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
+document.addEventListener('gesturestart',  function (e) { e.preventDefault(); }, { passive: false });
+document.addEventListener('gesturechange', function (e) { e.preventDefault(); }, { passive: false });
+document.addEventListener('gestureend',    function (e) { e.preventDefault(); }, { passive: false });
+
+const CONFIG = {
+  _credit: "Game Design: AHANA",
+  _versionLabel: "1.0版本",
+
+  pixelScale:     6,
+  charPixelScale: 4,
+
+  grassImg:    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAOBJREFUeJzt28ERgjAQheHEGUrw5sVGaMIutB8LohZvlsAhXnSGQQejwd119/9ODKe8ZFgICykBAPzZHbel5pxr08Bhwr8KvRR+IzEoSZfzNYdZbdyFWXEqe3oubK0T4K4IAgAAAAAAAACs+PU7/LEMtnoEkt3ZR3izkyDRwfkmvKvGyP500B6CLld9wrXCmKsJn2idhJrC6KoGzHW5z2MZSpf7rD0WNa7qAgB9f31fbWV2wyFpGj7kLUZydyfB9ZMg0MjLdV4t5B8WcxaqvOoYLARfOnZv7c/h3+E5AIjtBqMEcLB8C4d3AAAAAElFTkSuQmCC",
+  obstaclesImg: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAAAgCAMAAADaHo1mAAAAAXNSR0IArs4c6QAAAMBQTFRFAAAACAUWDhIvHB4vHyM3GiI8JyMvKyo+IiU7Jik6Iys8LDU/NzkyIyNFOjNJMzVBNDVDNjZOPjxSPD5bMjxUOD9QQkpAQEBRQUFWQEZUQUlXQkhWQEVZQkdYQ0hZSUxdSU5cSk1eSU5fS05fS1JeTVJxWlp3V1t4XFx5Xl57ZGligIN+W2KEWWWCbW2NamqHZXCPa3GKbnKPbXWPZm2Sbm+YZm2ScHSRc3aQcXWSdHSRd3eUeHiVdX2hf4OcgoenomYJxwAAAEB0Uk5TAP////////f////////3////9/f///////////////////////f////////3//f///////f3//////////f//4JPPpUAAAKvSURBVEiJ1ZV9d5MwFMYLSDbKoc6tbFXrK6vSQmHVgA4tfP9vtXuTQJNw2elR//FpkvYcep5f7kvCbPZ/yXXd6YfeSRP/YL2mLPymWU0RPO+IynkOohEsDDuheoLgCwBNUPaDKAIL190LVEcDwB5FxmD7c4rA1uvuKo7j5wAlDdD8FyAEEATGgqAFQDtVhIkUed7Jf7HYgBCR83GxBwDtP1Fkb4nK8wf032yqquKAsCshu+cEoFrJ9/0SAI7jkIA9+lfoD1MRBgA0UN11wZAiBr3EbPtGFXm1MhA9IO8BIoYRABuoBSGgbttRK8HmQVuFiAyCNwcBZPDHEC5AWoawgYTiOBFfVyYA/cum1ILQCQh4OBwGwB4A14fDQQe8Ex0K9mLEFsAvS9mjEMN2REDAsuAFAOZ5Na/uYG6ui4LrgPcnQEwAcN+Pav8/mua3BYD8SABY5/tqvh8D3nYy+YCAStQvCYAuowyizEWBgDv4iBgQUGiAN6871UVJ0l5eBmYXQQX8vovkjylAXwIboJ+DpA3sKxUB2waMh2EUwQZUBEBSAHBPnWQENNt/A/gcf6ABPsQg3FWKbACXACgCjBwBfALwkQCgL7ao3P4YcENEwOkIEjJF4IsZ+iUB35smJQD8PEDyiQZo4xH9/7QGSZKM35i+uoe+aOdAB9ycB1D+cBDCMeCb8P2KS2qdA08AVJHFZU0CGLsNghrOWRLXWRjaAHUV9asWgScu5iMhfjxqZ/kWtcuyLI4z+AotQAkSewf9NCIQ+1/yXBfvV8/yR2XgD6tGiFwBgJmKBJUm4PTCsQC5DdhJws4iRKUr7IccKUAUWQAzCgNg+CtKOPinborvm7K3L7FNIwemrPFz0gCmPxBYnyA3TWURZJ4wS6soeuWsnGh2phip4bEzoXPt/0ZPpvTgKc36HjMAAAAASUVORK5CYII=",
+  monstersImg: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABACAMAAADS6oI8AAAAAXNSR0IArs4c6QAAAFRQTFRFAAAAAAAAbhcBLngwkB0A1ygA/zEA/zYI/1cR/VQsRbNHUNpTavRt7IsA/7AAn/8A/94A/8M/LjuPRVrVTWf/Zn3/AIHFALfkAO3/O+f0R8n/////KAF6vgAAABx0Uk5TAP///////////////////////////////////6l3rVEAAARlSURBVFiF3ZaLcpswEEWzBuyUGAfLNZD4//+z+9YicAPpTDvTHWwkZN+jfSDp5eUvGHx7vBgBs+Jx9QVhGwB1L73YZc6A6uzYFT49nM9xfQB1s/V9HKva9nxuK/rvmaxkwAlM/QeZjdtzaop8by4wIgLaFoAwFRkzIqA5YV/VfygD+6cGXL8L8obw0QoJKE/ahGqZARHQnI4ofzweRZ7ucDo1BljqE6EzAgGgNfX2DQ17gQB10zTHwlC+qeGpPhK64ILJv7m1gcCAAtFk/Qx4RfPb3IVSf5VAiIYv1j9l/U70H4/Ha77PXBD99/d3UedGJDRmNvtAMIDpc4sBRsAEiP7jIQBpZAB7QGVoAaJ2ozkmfQFIgHoJUgBQgtcAOUgCwAkqgZuWBAeIYceznAHtbwGSgqMTpDEDdBnQlwBzoExBAdDAHPPdyqh0YcWBqi1r6K0ElK8BJ7uOhKfvAZzngKpSfQNA7YB6djPAC1yiC4UDGSCEiq8Z4JA9qNncg0MGdOVahE9WATlCM8BKjBoHqAt5vbhcGGmja4S2Lap0FeAvirgQLOgHgCNkTW0NsOpCcCAAOvsEwIzglvX9RShXuzr/oOuE0K0CcqWu60udcmrrxvIbIkTbpbwL4gZ+MzBuKXk7WNHHGCmgIQCKzwCgW2Q3tz7uy9mFai1Ch0bn7oBAgD7ntdPViBoENSdKfToFEEFPGqSfHZAbAw4K6FzfK6jjVOha4fqS7DN38QBAR4GoHwHH5qAEkNCLviZC+grg7Z7ltZjOvP2TsQtYpHV94B1GU9xwUdX4XFwQ9QsDjCZRy2ctVXT9eALEBjHqQ+372oEf+PnIctDrxLVm49kHImZ5uJNhkUXSAcoTHpvNGwt09YToP1wOzIaf/uKr8f/BvnTvjyKAf5zIfhfim9h3GKo+KUNnO/vBLdpeBMqPYoYgYKzjW2m7CGDyATKOS/0UvncRCoDYLEAsnO5iKe0EAAsOENVhoX+73d32uWDzHwBcfhiWGbjf54StAFOdpmHQQkd57OcdR/U/Tf6TCTsB03S9IoIMG+SUE0D1H0rgxmZC1n88rlw/0sgAdeATD9Wfok+N3QCUFYI2sgseIdKnUvqOB6R7vSpAGgsAhT79/JkkGbsB05Wv3FgC7gbYVUcwDr5CUCEN1jQA68MfAKYZYHoGMELQ3wMYFwB88dYA/qbBToD74PoKEP20eJNhuwsfw1gixrFwIMXVSNbU7S4YoLAhFxGktNgPEhI2LhZPCMNk48BqGhWbe8Jn21ejYZAlesUB9oEBFiftpM0OkC7WP3x8fMDooGHyXZkAON3kgBt1tgJEl/RZHC/ajWl38F0ZKCqJ9ZMAqJc25xgEIOojO4EEBIDVUSoAiQEbXYBh5PlKFpRCLowE8QAZQGYvSd5GYGV0YLBS4pTYNu36N/0iABhhI0AMQcQwnOT9RY+LN6ckLVE+322rU9qC5RKOf/vfgz44Ie05tvBcINyKg2N4tjb8T+0XKY6u8USWn+kAAAAASUVORK5CYII=",
+  giftsImg:    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAAAgCAMAAADaHo1mAAAAAXNSR0IArs4c6QAAAKtQTFRFAAAABQMAAQUBAAAFBQMAAQUBAAAFCgYAAgoCAAAKLS0tLi4uWlpaXFxcBQMAAQUBAAAFCgYAAgoCAAAKLS0tLi4uWlpaXFxc/zk5/3Jy2rUW/9gw//8s//9g/e58oS3hvkf//1r/FpraMLv/LP//fMn9YP////aH9/SK9vSM9vSO+/mY3ov//47/5ZT/65r+65z97J797qX/isL3jMH2jsL2h8r/mMr7////x9IZ1wAAADl0Uk5TAEpKSk9PT0pKSkpKSkr/////////////////////////////////////////////////////////IRUq7AAAAwdJREFUSImFlWt7mkAQRlHaqknLdRcMuGG5BNILpG1ayv//ZZ0ZVgVk1/mA8ryP56g7M1jWvJhlrns5v/d55tzJPTOfu3c+/88xGRj77pkMnP92TQbgl73BAPy0MRiALzuDAfklGHwDPwVDaOBLMAQm/rEsK3/9NxD/mKancP03EP8oZR7ofoPj9CXxd5vV3POalPgHezV33U4Sf79d+Xpng+Iv25GdDYq/zPnZoPjLdmWM0bWvK8fZnO9v80acPM++zTnndO3a3HW35/vp53tGNdSF4+CbPopmeaNykXgevmlmOZA51dBmrotvujieCV5KMkRDOQr6eog+T/LntBnzdBQ0YpbzH5IM8SBHQdcO8ZfpF3yB9uyHYejLoseqQcAm+TO0ZwN5kyYNlhDTnINAdh3kncw6rBYEfMaH9qzrulRV1091cfmbkQ/tKYRIVQnxJJJLjnxoz7Ztpaq2fWqzyTE4TlEWVVVAlXipqhrP4uFB5Z6XpMnplECleDmdBJ7FJXfdTGZ5nkFJvOR5i2fx+Hg1FNieUH/wDHzfr+B1c50GEEB7Qn3FMwjD8ASv9nUaQADtCfUTzyAIghxet5NpcJyRz/4CGPi+U1C3XgTeyGffAAz80EuoWy8Cd+TzXwAGfuBm1K3X8nG8NtA9ZeH7u90OZB+m4xzieNnQPWkShofDAWSfpuMc4HhtoXtkFgT7/R5kH+fjPI4vw0n2d3i/ma+LcXwZTnJ4wHt7vi7G8eU4ycEe77fLdYE8xt5rJbCW68im/FUogbVcR8jj/K1VAmtlHSFgqHEXrWUqF7iLdDlOMu4iXW7BpKpdpM3VLtII4kHtIk1FEe0irQBykRgEcUy7yCgo7wjSOwJpFgywJgqDYIA1kRgEA6yJTC+IoncS6J76UfRKAt1TP47fSKB7YhL/qDcQ/6g3EP9oMjBYScTfrP9JDFYS8e31P4nDSiL+zZCdi7aqlq+2qpavtqqBTwYDnwwGPhmMfDSY+Ggw8dFg5t8uuRuDkb+25JZl5t8uuWUt+f8BlTpqPXHH6SAAAAAASUVORK5CYII=",
+  giftsImg:    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAAAgCAMAAADaHo1mAAAAAXNSR0IArs4c6QAAAKtQTFRFAAAABQMAAQUBAAAFBQMAAQUBAAAFCgYAAgoCAAAKLS0tLi4uWlpaXFxcBQMAAQUBAAAFCgYAAgoCAAAKLS0tLi4uWlpaXFxc/zk5/3Jy2rUW/9gw//8s//9g/e58oS3hvkf//1r/FpraMLv/LP//fMn9YP////aH9/SK9vSM9vSO+/mY3ov//47/5ZT/65r+65z97J797qX/isL3jMH2jsL2h8r/mMr7////x9IZ1wAAADl0Uk5TAEpKSk9PT0pKSkpKSkr/////////////////////////////////////////////////////////IRUq7AAAAwdJREFUSImFlWt7mkAQRlHaqknLdRcMuGG5BNILpG1ayv//ZZ0ZVgVk1/mA8ryP56g7M1jWvJhlrns5v/d55tzJPTOfu3c+/88xGRj77pkMnP92TQbgl73BAPy0MRiALzuDAfklGHwDPwVDaOBLMAQm/rEsK3/9NxD/mKancP03EP8oZR7ofoPj9CXxd5vV3POalPgHezV33U4Sf79d+Xpng+Iv25GdDYq/zPnZoPjLdmWM0bWvK8fZnO9v80acPM++zTnndO3a3HW35/vp53tGNdSF4+CbPopmeaNykXgevmlmOZA51dBmrotvujieCV5KMkRDOQr6eog+T/LntBnzdBQ0YpbzH5IM8SBHQdcO8ZfpF3yB9uyHYejLoseqQcAm+TO0ZwN5kyYNlhDTnINAdh3kncw6rBYEfMaH9qzrulRV1091cfmbkQ/tKYRIVQnxJJJLjnxoz7Ztpaq2fWqzyTE4TlEWVVVAlXipqhrP4uFB5Z6XpMnplECleDmdBJ7FJXfdTGZ5nkFJvOR5i2fx+Hg1FNieUH/wDHzfr+B1c50GEEB7Qn3FMwjD8ASv9nUaQADtCfUTzyAIghxet5NpcJyRz/4CGPi+U1C3XgTeyGffAAz80EuoWy8Cd+TzXwAGfuBm1K3X8nG8NtA9ZeH7u90OZB+m4xzieNnQPWkShofDAWSfpuMc4HhtoXtkFgT7/R5kH+fjPI4vw0n2d3i/ma+LcXwZTnJ4wHt7vi7G8eU4ycEe77fLdYE8xt5rJbCW68im/FUogbVcR8jj/K1VAmtlHSFgqHEXrWUqF7iLdDlOMu4iXW7BpKpdpM3VLtII4kHtIk1FEe0irQBykRgEcUy7yCgo7wjSOwJpFgywJgqDYIA1kRgEA6yJTC+IoncS6J76UfRKAt1TP47fSKB7YhL/qDcQ/6g3EP9oMjBYScTfrP9JDFYS8e31P4nDSiL+zZCdi7aqlq+2qpavtqqBTwYDnwwGPhmMfDSY+Ggw8dFg5t8uuRuDkb+25JZl5t8uuWUt+f8BlTpqPXHH6SAAAAAASUVORK5CYII=",
+  homeImg:     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAoRJREFUWIXtVj1oFEEYfSNaiNfFM6xwAYNgE69IIznhIIXXSFKZBUEiWCSQKk3OIoInaOHZpArkikCCIGysFJu7QhDy1wg5r0mMCklxxHjdhUBSjMXeTGZmZ2fndgM2PljY2Z1v3ts379td4D8SokQITVJPzou8RGmstS4kJd+/dCcgphvEUi2Sj88PY3nqMzKnm/49xQmdMHHOxaTk+dFBAMDyFJA53USJECoSMIcknGzw064cCCMHgC8fvoY6QX+vcBfItTGJ0zoDJnIAyI8OYnx+uOtMWAmIIk8iIjIDtuSiCEDOhGm+MQNG8vSDYMHhe36qZuL5gecT2mYgijxf2UK+soXjozY/F0Wp2/Gi19XyaB2IIp9cPxvOZduYrqf4eGHI7IT6ngg4YEs+l21LdWw8uQ6jE2omJAHdBG66nuKkqgsqTCK4HVbkuuCFQdgGBt128DZk6kxP3mqUrfl7evsD18QWBQCcbARD+Ofba6orPi+0Dn7i6u2n8T9GVtugsT8MZgEiWWfRVqOMnoEiyg8HAtOL7xr+feagpl5F+Leg03LHR22ptcTtuXkjww8GkVxXby8AkNosDmzqjQJYb5t6PGm9UcDCEHD5Ssp/vWqw+2vfKCCqHlBCWKYTdBE/MHPYr+15tT3FvVdhUy8JKNMJWvWa/sCtYQb3wmVbQEf2Jl0D0j5XkVQIFyCRA6h6TcCt4e7aY+3iuXQ48dr369J4Nbckr9sBEyFloOA6KLgOnywWx8FqbglVr8kPtrYIwtSI6gquw9UWXAd19+zesyf3I4lfLn5C1nOkJxaxs7sDANib3Sb8ndz36lbov9ve7Daf92hsJPJH8+3KR2K73j/HX72tUqA3L/spAAAAAElFTkSuQmCC",
+
+  dialogBorderColor: "#ffffff",
+  dialogTextColor:   "#ffffff",
+  dialogBgColor:     "rgba(0,0,0,0.5)",
+
+  dialogFontSize:    34,
+  dialogLineHeight:  1.4,
+  dialogDuration:    2.8,
+
+  dialogMaxWidth:    440,
+  dialogPaddingX:    22,
+  dialogPaddingY:    22,
+
+  dialogTextAlign:   'center',
+  dialogTextOffsetX: 0,
+  dialogTextOffsetY: 5,
+
+  dialogCornerR:     18,
+  dialogTailSize:    14,
+  dialogBorderWidth: 2.5,
+
+   playerImg: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAAXNSR0IArs4c6QAAAFdQTFRFAAAAAgICLxYRPiQeISEhPigjMzMzODg4OD47PDw8Pj4+TDIrZUQ7SUZGX19ff39/llJJc4yLo8XEjsnqzdLSzNjX0tLS+8jO/+DRzen5//Ls/v7+////TjnWVwAAAB10Uk5TAP/////////////////////////////////////jxRbPAAABI0lEQVQ4jY3Si5aCIBAG4BmFrABD89aM7/+cO4PbloLn7ASk/B+gnQC+y1qb+klZ6z0ze18mEjNPnHqJyOoJUZr2SXbJ87R22gbOhJX17DXQgWUPe8hlTjZ2PtWk2h4Af3IRvAfbAW+g4+EQBdsG2sj5dP8N5M3cDjh52T1A/AAROrF7CLl3v/myLOQOuQBN6qoiR1VVLwILoHquVyJar8+qBBzVr64T0HWvWp8iA5HWvhfQ9yvFEvBxnmcBMkZ/BIBWhdSig1xbhBxACCONIUAJgPwbw8CMzEOQa8iADs2AIw4N/s3sATaN/sL6lYMtNwmYTWQViSSUDxLFMpjRGG1zGUCMaQODsZwD3NrHvb0/2ttJDviuMwBoLngx5/k/QH7CDwJWF0XaRCaVAAAAAElFTkSuQmCC",
+  loverImg:  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAAXNSR0IArs4c6QAAACRQTFRFAAAAAAAAHR4jJSUlPkBOSEhIWFhYVFZj98U3xYKC5OTk////CHETPQAAAAx0Uk5TAP//////////////CcRQJgAAAOpJREFUOI2VklESgyAMREksVcn979vNGgQ17UzzQWzfG1iipfxXgro+3IVaq0w94yASPReWxcyWJRXIq3nV1MDe+P8QsFMWk4eT5yEhmAgELC5kKZxJCOh33uw8wprgZ2L0alJmQbX3wXFgG8Kq0VoULinTVXR1w9fgMfEh7GDguxo5J1EvAgxwCG7ErIag61k6Cy0VhMMktyFsnkB1c6EI31cfFEYAdgq8r9gbQqsu8ILzEfzk+E1ycaRTCL2/v5jQK+rBjxnD+ilwf/LnCUNwI4nADD1flvHMf4gJ78YPoagehn7hVKKe6AMJbguDZX9a+gAAAABJRU5ErkJggg==",
+ 
+  lightImg:  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAAXNSR0IArs4c6QAAAFRQTFRFAAAAFw0BNyADOSMGOSQJWzYGRiwRXT8fe0QKX0kyOUJW/z4+gFQly28M+ngcgmdL+rUAr4tm/atT/+pN/9R7WGiLyqqJ/9+N//u//+bE//PI////noHneAAAABx0Uk5TAP///////////////////////////////////6l3rVEAAAD7SURBVDiNlZLBcsMgDESFKIkwdSBEdh36//9ZKc7kEJAzXQ4+7JO00hjgv8IPfqDluP5LdNwBp4Ny9OFOi/c4DoJE5NcwefkOCSQArx0AhsDDj9c8TQahAPhvH8U3Ab/LAGaA7VK5XjaA2QJq41bHwMu3CKwKcGuNFagdEAQg5pYas8St3cUDSwOi9JOIpAWPAU70S4lHgE7YmFOhkpi3fsYzY5EOZU/5DsiWGqLcikbo90RS4nVqmLtjO5oFCc67IPZM7n0LcI5IfSGIXO/rGHQnlOeMX06axHzP59MyLN+BNZ8PAIw7YBGPATlHm8A1qgQwZ7inrJAj/QHVhQ1vPvHzVwAAAABJRU5ErkJggg==",
+  backImg:   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABYAAAASCAMAAABo+94fAAAAAXNSR0IArs4c6QAAAAZQTFRFAAAAlWqtacqfrAAAAAJ0Uk5TAP9bkSK1AAAAI0lEQVQYlWNgGOqAkZFyUTjAoRqHOJppMHGslmAVxrASDQAAEO8AIF4FkxAAAAAASUVORK5CYII=",
+
+  leftImg:   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAcAAAFMCAMAAAAwZFb6AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAMAUExURQAAADMrN0czUmpBgqF7tgUFBQYGBgcHBwgICAkJCQoKCgsLCwwMDA0NDQ4ODg8PDxAQEBERERISEhMTExQUFBUVFRYWFhcXFxgYGBkZGRoaGhsbGxwcHB0dHR4eHh8fHyAgICEhISIiIiMjIyQkJCUlJSYmJicnJygoKCkpKSoqKisrKywsLC0tLS4uLi8vLzAwMDExMTIyMjMzMzQ0NDU1NTY2Njc3Nzg4ODk5OTo6Ojs7Ozw8PD09PT4+Pj8/P0BAQEFBQUJCQkNDQ0REREVFRUZGRkdHR0hISElJSUpKSktLS0xMTE1NTU5OTk9PT1BQUFFRUVJSUlNTU1RUVFVVVVZWVldXV1hYWFlZWVpaWltbW1xcXF1dXV5eXl9fX2BgYGFhYWJiYmNjY2RkZGVlZWZmZmdnZ2hoaGlpaWpqamtra2xsbG1tbW5ubm9vb3BwcHFxcXJycnNzc3R0dHV1dXZ2dnd3d3h4eHl5eXp6ent7e3x8fH19fX5+fn9/f4CAgIGBgYKCgoODg4SEhIWFhYaGhoeHh4iIiImJiYqKiouLi4yMjI2NjY6Ojo+Pj5CQkJGRkZKSkpOTk5SUlJWVlZaWlpeXl5iYmJmZmZqampubm5ycnJ2dnZ6enp+fn6CgoKGhoaKioqOjo6SkpKWlpaampqenp6ioqKmpqaqqqqurq6ysrK2tra6urq+vr7CwsLGxsbKysrOzs7S0tLW1tba2tre3t7i4uLm5ubq6uru7u7y8vL29vb6+vr+/v8DAwMHBwcLCwsPDw8TExMXFxcbGxsfHx8jIyMnJycrKysvLy8zMzM3Nzc7Ozs/Pz9DQ0NHR0dLS0tPT09TU1NXV1dbW1tfX19jY2NnZ2dra2tvb29zc3N3d3d7e3t/f3+Dg4OHh4eLi4uPj4+Tk5OXl5ebm5ufn5+jo6Onp6erq6uvr6+zs7O3t7e7u7u/v7/Dw8PHx8fLy8vPz8/T09PX19fb29vf39/j4+Pn5+fr6+vv7+/z8/P39/f7+/v///2coCIsAAAABdFJOUwBA5thmAAAAR0lEQVR42uzWIQ6AQBBD0fLb+58ZwexqECSQdMwzY+q+tC9JIsW2PbwrcCnVWmuttX7T6ZX7nTP/q3O2xy90MjvyvO8A4BwAs14UeFMRHxYAAAAASUVORK5CYII=",
+  rightImg:  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAcAAAFMCAMAAAAwZFb6AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAMAUExURQAAADMrN0czUmpBgqF7tgUFBQYGBgcHBwgICAkJCQoKCgsLCwwMDA0NDQ4ODg8PDxAQEBERERISEhMTExQUFBUVFRYWFhcXFxgYGBkZGRoaGhsbGxwcHB0dHR4eHh8fHyAgICEhISIiIiMjIyQkJCUlJSYmJicnJygoKCkpKSoqKisrKywsLC0tLS4uLi8vLzAwMDExMTIyMjMzMzQ0NDU1NTY2Njc3Nzg4ODk5OTo6Ojs7Ozw8PD09PT4+Pj8/P0BAQEFBQUJCQkNDQ0REREVFRUZGRkdHR0hISElJSUpKSktLS0xMTE1NTU5OTk9PT1BQUFFRUVJSUlNTU1RUVFVVVVZWVldXV1hYWFlZWVpaWltbW1xcXF1dXV5eXl9fX2BgYGFhYWJiYmNjY2RkZGVlZWZmZmdnZ2hoaGlpaWpqamtra2xsbG1tbW5ubm9vb3BwcHFxcXJycnNzc3R0dHV1dXZ2dnd3d3h4eHl5eXp6ent7e3x8fH19fX5+fn9/f4CAgIGBgYKCgoODg4SEhIWFhYaGhoeHh4iIiImJiYqKiouLi4yMjI2NjY6Ojo+Pj5CQkJGRkZKSkpOTk5SUlJWVlZaWlpeXl5iYmJmZmZqampubm5ycnJ2dnZ6enp+fn6CgoKGhoaKioqOjo6SkpKWlpaampqenp6ioqKmpqaqqqqurq6ysrK2tra6urq+vr7CwsLGxsbKysrOzs7S0tLW1tba2tre3t7i4uLm5ubq6uru7u7y8vL29vb6+vr+/v8DAwMHBwcLCwsPDw8TExMXFxcbGxsfHx8jIyMnJycrKysvLy8zMzM3Nzc7Ozs/Pz9DQ0NHR0dLS0tPT09TU1NXV1dbW1tfX19jY2NnZ2dra2tvb29zc3N3d3d7e3t/f3+Dg4OHh4eLi4uPj4+Tk5OXl5ebm5ufn5+jo6Onp6erq6uvr6+zs7O3t7e7u7u/v7/Dw8PHx8fLy8vPz8/T09PX19fb29vf39/j4+Pn5+fr6+vv7+/z8/P39/f7+/v///2coCIsAAAABdFJOUwBA5thmAAAARklEQVR42uzWMQ6AQAwDQWPv/99MkTt6kJBAcpop43KldQBISpJ4Gb+m7XmkWmuttdZvunvldudcvTMe8Ath9vK872z7HAB6GRI7yUl0TwAAAABJRU5ErkJggg==",
+  middleImg: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAFMCAMAAAA9eia9AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAMAUExURQAAADMrN0czUmpBgqF7tgUFBQYGBgcHBwgICAkJCQoKCgsLCwwMDA0NDQ4ODg8PDxAQEBERERISEhMTExQUFBUVFRYWFhcXFxgYGBkZGRoaGhsbGxwcHB0dHR4eHh8fHyAgICEhISIiIiMjIyQkJCUlJSYmJicnJygoKCkpKSoqKisrKywsLC0tLS4uLi8vLzAwMDExMTIyMjMzMzQ0NDU1NTY2Njc3Nzg4ODk5OTo6Ojs7Ozw8PD09PT4+Pj8/P0BAQEFBQUJCQkNDQ0REREVFRUZGRkdHR0hISElJSUpKSktLS0xMTE1NTU5OTk9PT1BQUFFRUVJSUlNTU1RUVFVVVVZWVldXV1hYWFlZWVpaWltbW1xcXF1dXV5eXl9fX2BgYGFhYWJiYmNjY2RkZGVlZWZmZmdnZ2hoaGlpaWpqamtra2xsbG1tbW5ubm9vb3BwcHFxcXJycnNzc3R0dHV1dXZ2dnd3d3h4eHl5eXp6ent7e3x8fH19fX5+fn9/f4CAgIGBgYKCgoODg4SEhIWFhYaGhoeHh4iIiImJiYqKiouLi4yMjI2NjY6Ojo+Pj5CQkJGRkZKSkpOTk5SUlJWVlZaWlpeXl5iYmJmZmZqampubm5ycnJ2dnZ6enp+fn6CgoKGhoaKioqOjo6SkpKWlpaampqenp6ioqKmpqaqqqqurq6ysrK2tra6urq+vr7CwsLGxsbKysrOzs7S0tLW1tba2tre3t7i4uLm5ubq6uru7u7y8vL29vb6+vr+/v8DAwMHBwcLCwsPDw8TExMXFxcbGxsfHx8jIyMnJycrKysvLy8zMzM3Nzc7Ozs/Pz9DQ0NHR0dLS0tPT09TU1NXV1dbW1tfX19jY2NnZ2dra2tvb29zc3N3d3d7e3t/f3+Dg4OHh4eLi4uPj4+Tk5OXl5ebm5ufn5+jo6Onp6erq6uvr6+zs7O3t7e7u7u/v7/Dw8PHx8fLy8vPz8/T09PX19fb29vf39/j4+Pn5+fr6+vv7+/z8/P39/f7+/v///2coCIsAAAABdFJOUwBA5thmAAAAJUlEQVR42mJgYGBhYMYJmRhGwSggDjChpBsmBkaSIAtKOmQCDAB+jgBzD592yQAAAABJRU5ErkJggg==",
+  titleImg:  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAAAzCAMAAAD2BPeCAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAMAUExURTMrN0czUqF7tqCp2f///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM+z3DMAAAAFdFJOU/////8A+7YOUwAAAiBJREFUeNrsmttywyAMRNWu//+b+9DW0WUF4pKpOwMv8diY6IBWCCVyhfbx4BatlQPwGADd7/ORjZIcgIcAOLvlkc2RHIDnANzWyz9pmqEEgIG7OxqwGwBkSHWPPi8NQueiOxwBaPtPHBFABIBvVbPsE/JuxjAOYO3sASAMQnvYrpR+HgBpi4CAct9XH4WXLZK/RNGLruuSjgB6thsTzVr5qxaAhNXoEdwymAHIOunvdcbdAP4tJwO7btgB4GYj07OeQff12Zw61ydIDVcyAJ0tLEisBaA8RYYASPTpSOGbYScAeBQZAbAuKwUvKgJ4FxEWVeEEMQjwE8VQjENlAOsTQc9htuYBBFLR79sAqEMVAKjPvQsAOYCe/bBLTQOsa4DvA8Y8Jz8vZfNBx8p2OewQcQ9AfgEkSTD6APK3ACaV8IkNAeCeorfp7RrwuUodIGoAkgM4YtkVRoPgMgBprQCaYdTMz+uFLQAyD4BRAG06agnpEEBPAy0JJjlIDiA7AYoiXgVwg3cIagBYikIyBBAMr4bR6oEmnZxUxM2bDEA8wJ4TWRTvFID0NUBywWUAYUfVUQDwfdid5OtFJgVQKauEhSgDoFJ4gVFArf43VhcyAJIBNFKZJBmPews5FO8EwCQAaHJAM9tqNucBSimdCgsUYLAsql0oD9tbirv1uvHca6ODLgC8qZy+CHB+YjoA6wDnh+4DsA5w/m5zAKYAvgYASoErae7oIyIAAAAASUVORK5CYII=",
+  goodImg:   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAAAYCAMAAAAGTsm6AAAAAXNSR0IArs4c6QAAAAxQTFRFAAAAJgVDt2n/+bj/D+IeXQAAAAR0Uk5TAP///7MtQIgAAAG1SURBVEiJrVaLbsQwCCvj//95bcPDJtB20iJtusuZmBgXehy+9FzHx/UV6Ti11UXjL74BIfWnT8yO40M4WlXOBTsLp1qY18cL2SS08TpObF3otQuYn3Plzg3GGAEB5Ea+MSfuPtvO991CLOoKW1DE3GDP40JSQsN9F+6ZWO3AxbwYZSPOr7Q/3dcRkW4lhptoVCIj4m4TsW7rqAKT8BKOMdCSJTwgTCQ6SL3zWllM6ok4byKxbS7fiJffXJmkqCtw9+de6jA8EIfLV7Af4EmGMkVUSjKl7s3l+XhRmVidOO1OCbKN/kIM9fU/T6ch9vumMmDNXWpJddIPI7EXvhBD3eJIaiuNubgsTHxkZuZrcDoQS8qX0pFNmsdJAs/uiSgmxt4ln4jHhpnErauhErWa/ks+x43Uj51rbJmbjdAEcE8Kg0HxSjwMieJTEQbgiAJr4IR6kTr7HY/FnENYReg7pTnGLjwiz8R8Qs5jG9dAGPcvjYFn64u9SMG2xjncsxv/H3HT7bFX4KtPmFq0dCRssLw7MPMrTJU6cGyUthu1+z1v3qA7Ycfh9y5qZ554/TW2O+H89wuh3hGxM/KufgAAAABJRU5ErkJggg==",
+  fireworksImg: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACEAAAAjCAMAAAAt8pNWAAAAAXNSR0IArs4c6QAAACpQTFRFAAAAw4cC1JEA5YcA5Z4A7KIA/78N/+QTaAejfwej/0WqjSXMt0b7BOTwqvydLgAAAA50Uk5TAP////////////////9XStsUAAAA40lEQVQ4jY3RQQKEIAgAQFSUgvj/d5c0S82tOJkNiAjQhCq8hOqr+UA+HJQJfypC1G0z813QIPhdcN/pIM5zZqCuCmkEjAL6IsMRjTjI2MStSAXDhK9GzgpTMasOx92eRYxE3DwYN1OuIjZbXOMEiOQ9c6T6H/pFEfYZM2kyO2HA+xingwIQSYkM/CdZeP9AZEsX0SPqLSl3sRnBQlR70opMVOPk0RDTJojoiFRnnex9JhF0FvY+M7H3ibIszh1oFLhJsgLLHiGEun0560JK+rqu03GhFeizb8Kyw5/sEu4hO8cPT2wK6sp88wUAAAAASUVORK5CYII=",
+
+  backW: 132,
+  backH: 108,
+  middleStretchW: 996,
+
+  floorColor: "#4fad57",
+  exploredGroundAlpha: 0.3,
+
+  canvasW: 1080,
+  canvasH: 2016,
+
+  mapX: 28,
+  mapY: 120,
+  cols: 8,
+  rows: 13,
+  tile: 128,
+
+  uiX: 40,
+  uiH: 144,
+  uiBottomMargin: 45,
+
+  playerSpeed: 1.1,
+  baseTilesPerSec: 4,
+
+  monsterTotal: 15,
+  maxMonsters: 6,
+
+  monsterIdleSpeed:   0.75,
+  monsterRoamSpeed:   1.25,
+  monsterFleeSpeed:   3.6,
+  monsterAxisSpeed:   1.15,
+  monsterFollowSpeed: 1.8,
+
+  monsterDetectRange: 3,
+  monsterFadeIn:      0.55,
+  monsterDeathTime:   0.5,
+  knockbackDist:      0.85,
+  playerKnockDist:    0.32,
+  playerKnockTime:    0.22,
+
+  playerLightRadius: 1,
+  playerLightRadiusPerSource: 0.5,
+  maxPlayerLightRadius: 2.5,
+
+  touchDist: 0.62,
+
+  loverRevealDist:   1.5,
+  loverFleeDist:     1.1,
+  loverFollowDist:   0.9,
+  loverWalkSpeed:    4.2,
+  loverFleeSpeed:    2.6,
+
+  exitSnapTime: 0.2,
+  exitFinalPause: 1.5,
+  exitJumpHeight: 32,
+  exitJumpSpeed: 8,
+  exitJumpDropY: 4,
+  exitOffset: 0.32,
+
+  giftBounceTime: 0.5,
+  giftPickTime: 0.35,
+
+  ghostBobAmp: 6,
+  charScale: 0.9,
+
+  obstaclePixelScale: 4,
+  grassPixelScale: 4,
+
+  titleText: "斩怪归途",
+  titleColor: "#ffd23f",
+  titleFontSize: 52,
+  titleLetterSpacing: 10,
+  titleY: 60,
+
+  hudTextColor: "#ffd23f",
+  hudYellow: "#ffd23f",
+  hudBarBg: "#000000",
+  hudBarFill: "#e0603f",
+  hudBarText: "#ffffff",
+  hudPink: "#dda0dd",
+
+  lightBreatheSpeed: 2.4,
+  lightGlowRadius: 0.7,
+  lightGlowBreathe: 0.20,
+  lightGlowAlphaMin: 0.20,
+  lightGlowAlphaMax: 0.46,
+
+  exitFillColor: "#ff93c8",
+  exitNeonHueSpeed: 90,
+  exitNeonHueSpan: 300,
+  exitNeonSaturation: 100,
+  exitNeonLightness: 62,
+  exitNeonLineWidth: 8,
+  exitNeonGlowBlur: 28,
+  exitNeonCoreWhite: 0.85,
+  exitNeonPulseSpeed: 6,
+  exitNeonPulseMin: 0.6,
+
+  exitGlowColor: "rgba(237,98,150,0.95)",
+  exitGlowScale: 0.5,
+  exitBreatheSpeed: 5.0,
+  exitBreatheAmount: 0.4,
+
+  winTitleColor: "#db2965",
+  overlayTextColor: "#ffe9c9",
+
+  overlayAnimDuration: 0.9,
+  overlayBreatheAmp: 0.05,
+  overlayBreatheSpeed: 3.0,
+
+  confettiCount: 140,
+  confettiGravity: 420,
+  confettiLife: 6.0,
+
+  endSidePad: 20,
+  endInfoGap: 60,
+  endButtonGap: 70,
+  fireworksShiftY: 30,
+  overlayShiftY: 60,
+
+  obstacleDensity:    0.15,
+  obstacleDensityLow: 0.10
+};
+
+const COLS = CONFIG.cols;
+const ROWS = CONFIG.rows;
+const TILE = CONFIG.tile;
+const MAP_W = Math.round(COLS * TILE);
+const MAP_H = Math.round(ROWS * TILE);
+
+const CSS_W = CONFIG.canvasW;
+const CSS_H = CONFIG.canvasH;
+const UI_Y = CONFIG.canvasH - CONFIG.uiBottomMargin - CONFIG.uiH;
+
+const FONT = "sans-serif";
+
+const GROUP_DEFS = [
+  { name: 'green',     row: 0, col: 0, behavior: 'idle',   color: '#5fbf6a' },
+  { name: 'red',       row: 0, col: 1, behavior: 'roam',   color: '#d94f4f' },
+  { name: 'yellow',    row: 0, col: 2, behavior: 'flee',   color: '#e0c040' },
+  { name: 'lightblue', row: 1, col: 0, behavior: 'axis',   color: '#6fc4e0' },
+  { name: 'darkblue',  row: 1, col: 1, behavior: 'follow', color: '#4a6fd9' },
+];
+const MONSTER_ROWS = 2;
+const MONSTER_COLS = 3;
+const GIFT_ROWS = 1;
+const GIFT_COLS = 3;
+const OBSTACLE_ROWS = 1;
+const OBSTACLE_COLS = 3;
+const GRASS_ROWS = 2;
+const GRASS_COLS = 2;
+
+const DIRS4 = [[1,0],[-1,0],[0,1],[0,-1]];
+const DIRS8 = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+/* ★ 优化：DPR 上限设为 2，避免高 DPR 手机像素量翻倍 */
+function setupCanvas() {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  const cssScale = Math.min(vw / CSS_W, vh / CSS_H);
+  const cssW = CSS_W * cssScale;
+  const cssH = CSS_H * cssScale;
+
+  const bmpW = Math.round(cssW * dpr);
+  const bmpH = Math.round(cssH * dpr);
+  canvas.width  = bmpW;
+  canvas.height = bmpH;
+
+  const leftPhys = Math.round((vw - cssW) / 2 * dpr);
+  const topPhys  = Math.round((vh - cssH) / 2 * dpr);
+
+  canvas.style.width  = cssW + 'px';
+  canvas.style.height = cssH + 'px';
+  canvas.style.left   = (leftPhys / dpr) + 'px';
+  canvas.style.top    = (topPhys  / dpr) + 'px';
+
+  const sx = bmpW / CSS_W;
+  const sy = bmpH / CSS_H;
+  ctx.setTransform(sx, 0, 0, sy, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+}
+
+setupCanvas();
+window.addEventListener('resize', setupCanvas);
+window.addEventListener('orientationchange', function () { setTimeout(setupCanvas, 120); });
+
+try {
+  const mq = window.matchMedia('(resolution: ' + (window.devicePixelRatio || 1) + 'dppx)');
+  if (mq.addEventListener) mq.addEventListener('change', setupCanvas);
+  else if (mq.addListener) mq.addListener(setupCanvas);
+} catch (e) {}
+
+const sceneCanvas = document.createElement('canvas');
+sceneCanvas.width = MAP_W; sceneCanvas.height = MAP_H;
+const sceneCtx = sceneCanvas.getContext('2d');
+sceneCtx.imageSmoothingEnabled = false;
+
+const memCanvas = document.createElement('canvas');
+memCanvas.width = MAP_W; memCanvas.height = MAP_H;
+const memCtx = memCanvas.getContext('2d');
+memCtx.imageSmoothingEnabled = false;
+
+const lightCanvas = document.createElement('canvas');
+lightCanvas.width = MAP_W; lightCanvas.height = MAP_H;
+const lightCtx = lightCanvas.getContext('2d');
+lightCtx.imageSmoothingEnabled = false;
+
+const MASK_SCALE = 0.5;
+const MASK_W = Math.max(1, Math.round(MAP_W * MASK_SCALE));
+const MASK_H = Math.max(1, Math.round(MAP_H * MASK_SCALE));
+const maskCanvas = document.createElement('canvas');
+maskCanvas.width = MASK_W; maskCanvas.height = MASK_H;
+const maskCtx = maskCanvas.getContext('2d');
+maskCtx.imageSmoothingEnabled = false;
+
+const decorCanvas = document.createElement('canvas');
+decorCanvas.width = CSS_W;
+decorCanvas.height = CSS_H;
+const decorCtx = decorCanvas.getContext('2d');
+decorCtx.imageSmoothingEnabled = false;
+
+/* ★ 优化：脏标记，只在需要时重建各层 */
+let decorDirty = true;
+let memDirty   = true;
+let lightDirty = true;
+let lightFrame = 0;
+
+const IMG = {};
+let pendingSceneRebuild = false;
+
+function loadImage(key, src) {
+  if (!src) { IMG[key] = null; return; }
+  const im = new Image();
+  im.onload = () => {
+    IMG[key] = im;
+    decorDirty = true;
+    if (key === 'grass' || key === 'obstacles') {
+      pendingSceneRebuild = true;
+    }
+  };
+  im.onerror = () => { IMG[key] = null; };
+  im.src = src;
+}
+
+loadImage('grass',    CONFIG.grassImg);
+loadImage('obstacles',CONFIG.obstaclesImg);
+loadImage('player',   CONFIG.playerImg);
+loadImage('lover',    CONFIG.loverImg);
+loadImage('light',    CONFIG.lightImg);
+loadImage('gifts',    CONFIG.giftsImg);
+loadImage('monsters', CONFIG.monstersImg);
+loadImage('back',     CONFIG.backImg);
+loadImage('left',     CONFIG.leftImg);
+loadImage('right',    CONFIG.rightImg);
+loadImage('middle',   CONFIG.middleImg);
+loadImage('total',    CONFIG.titleImg);
+loadImage('good',     CONFIG.goodImg);
+loadImage('fireworks',CONFIG.fireworksImg);
+loadImage('home',     CONFIG.homeImg);
+
+function imgReady(key) {
+  const im = IMG[key];
+  return !!(im && im.complete && im.naturalWidth > 0);
+}
+function pxW(key, fallback) {
+  return imgReady(key) ? IMG[key].naturalWidth * CONFIG.pixelScale : fallback;
+}
+
+function randInt(n) { return Math.floor(Math.random() * n); }
+function choice(a) { return a[randInt(a.length)]; }
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = randInt(i + 1);
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+function distCells(c1, r1, c2, r2) { return Math.hypot(c1 - c2, r1 - r2); }
+function clampC(c) { return Math.max(0, Math.min(COLS - 1, c)); }
+function clampR(r) { return Math.max(0, Math.min(ROWS - 1, r)); }
+
+function easeOutBack(t) {
+  const c1 = 1.70158;
+  const c3 = c1 + 1;
+  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+}
+function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+function roundRectPath(c, x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  c.beginPath();
+  c.moveTo(x + r, y);
+  c.lineTo(x + w - r, y);
+  c.quadraticCurveTo(x + w, y, x + w, y + r);
+  c.lineTo(x + w, y + h - r);
+  c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  c.lineTo(x + r, y + h);
+  c.quadraticCurveTo(x, y + h, x, y + h - r);
+  c.lineTo(x, y + r);
+  c.quadraticCurveTo(x, y, x + r, y);
+  c.closePath();
+}
+
+function buildBubblePath(c, bx, by, bw, bh, r, tailX, tailDir, tailSize) {
+  const x0 = bx, y0 = by, x1 = bx + bw, y1 = by + bh;
+  r = Math.min(r, bw / 2, bh / 2);
+
+  const minTailX = x0 + r + tailSize + 2;
+  const maxTailX = x1 - r - tailSize - 2;
+  if (tailX < minTailX) tailX = minTailX;
+  if (tailX > maxTailX) tailX = maxTailX;
+
+  c.beginPath();
+  if (tailDir === 'down') {
+    c.moveTo(x0 + r, y0);
+    c.lineTo(x1 - r, y0);
+    c.arcTo(x1, y0, x1, y0 + r, r);
+    c.lineTo(x1, y1 - r);
+    c.arcTo(x1, y1, x1 - r, y1, r);
+    c.lineTo(tailX + tailSize, y1);
+    c.lineTo(tailX, y1 + tailSize);
+    c.lineTo(tailX - tailSize, y1);
+    c.lineTo(x0 + r, y1);
+    c.arcTo(x0, y1, x0, y1 - r, r);
+    c.lineTo(x0, y0 + r);
+    c.arcTo(x0, y0, x0 + r, y0, r);
+    c.closePath();
+  } else {
+    c.moveTo(x0 + r, y0);
+    c.lineTo(tailX - tailSize, y0);
+    c.lineTo(tailX, y0 - tailSize);
+    c.lineTo(tailX + tailSize, y0);
+    c.lineTo(x1 - r, y0);
+    c.arcTo(x1, y0, x1, y0 + r, r);
+    c.lineTo(x1, y1 - r);
+    c.arcTo(x1, y1, x1 - r, y1, r);
+    c.lineTo(x0 + r, y1);
+    c.arcTo(x0, y1, x0, y1 - r, r);
+    c.lineTo(x0, y0 + r);
+    c.arcTo(x0, y0, x0 + r, y0, r);
+    c.closePath();
+  }
+}
+
+function wrapText(c, text, maxWidth) {
+  const lines = [];
+  let current = '';
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '\n') { lines.push(current); current = ''; continue; }
+    const test = current + ch;
+    if (c.measureText(test).width > maxWidth && current.length > 0) {
+      lines.push(current);
+      current = ch;
+    } else {
+      current = test;
+    }
+  }
+  if (current.length > 0) lines.push(current);
+  return lines;
+}
+
+function drawSpacedTitle(c, text, cx, cy, spacing, fillStyle) {
+  const chars = Array.from(text);
+  const prevAlign = c.textAlign;
+  const prevBaseline = c.textBaseline;
+  c.textAlign = 'left';
+  c.textBaseline = 'middle';
+  const widths = chars.map(ch => c.measureText(ch).width);
+  let totalWidth = 0;
+  for (let i = 0; i < widths.length; i++) {
+    totalWidth += widths[i];
+    if (i < widths.length - 1) totalWidth += spacing;
+  }
+  const startX = cx - totalWidth / 2;
+  c.fillStyle = fillStyle;
+  let fx = startX;
+  for (let i = 0; i < chars.length; i++) {
+    c.fillText(chars[i], fx, cy);
+    fx += widths[i] + spacing;
+  }
+  c.textAlign = prevAlign;
+  c.textBaseline = prevBaseline;
+}
+
+function drawGlyphCentered(c, ch, centerX, centerY, fillStyle) {
+  const prevAlign = c.textAlign;
+  const prevBaseline = c.textBaseline;
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.fillStyle = fillStyle;
+  c.fillText(ch, centerX, centerY);
+  c.textAlign = prevAlign;
+  c.textBaseline = prevBaseline;
+}
+
+/* ============================================================
+   RPG 风格音效
+   ============================================================ */
+const Sound = (function () {
+  let actx = null;
+  let master = null;
+  let ok = true;
+
+  function init() {
+    if (actx) return actx;
+    if (!ok) return null;
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) { ok = false; return null; }
+      actx = new AC();
+      master = actx.createGain();
+      master.gain.value = 0.5;
+      master.connect(actx.destination);
+    } catch (e) { ok = false; actx = null; }
+    return actx;
+  }
+
+  function resume() {
+    const c = init();
+    if (c && c.state === 'suspended') { try { c.resume(); } catch (e) {} }
+  }
+
+  function tone(opt) {
+    const c = init();
+    if (!c) return;
+    if (c.state === 'suspended') { try { c.resume(); } catch (e) {} }
+    const t0 = c.currentTime + (opt.delay || 0);
+    const dur = opt.dur || 0.15;
+    const vol = opt.vol == null ? 0.16 : opt.vol;
+    const osc = c.createOscillator();
+    const g = c.createGain();
+    osc.type = opt.type || 'triangle';
+    osc.frequency.setValueAtTime(opt.freq, t0);
+    if (opt.to) osc.frequency.exponentialRampToValueAtTime(Math.max(20, opt.to), t0 + dur);
+    const atk = opt.atk == null ? Math.min(0.015, dur * 0.3) : opt.atk;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + atk);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(g);
+    g.connect(master);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.04);
+  }
+
+  function noise(opt) {
+    const c = init();
+    if (!c) return;
+    if (c.state === 'suspended') { try { c.resume(); } catch (e) {} }
+    const dur = opt.dur || 0.2;
+    const len = Math.max(1, Math.floor(c.sampleRate * dur));
+    const buf = c.createBuffer(1, len, c.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const src = c.createBufferSource();
+    src.buffer = buf;
+    const filter = c.createBiquadFilter();
+    filter.type = opt.type || 'lowpass';
+    filter.frequency.setValueAtTime(opt.freq || 1600, c.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(opt.to || 260, c.currentTime + dur);
+    filter.Q.value = opt.q || 1;
+    const g = c.createGain();
+    g.gain.setValueAtTime(opt.vol == null ? 0.1 : opt.vol, c.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + dur);
+    src.connect(filter);
+    filter.connect(g);
+    g.connect(master);
+    src.start(c.currentTime + (opt.delay || 0));
+    src.stop(c.currentTime + dur + 0.05);
+  }
+
+  return {
+    resume,
+    hit() {
+      noise({ dur: 0.09, freq: 6000, to: 1800, type: 'highpass', vol: 0.15, q: 0.7 });
+      tone({ freq: 720, to: 190, dur: 0.13, type: 'square',  vol: 0.085 });
+      tone({ freq: 1440, to: 420, dur: 0.10, type: 'sawtooth', vol: 0.05, delay: 0.012 });
+      tone({ freq: 150, to: 70,  dur: 0.16, type: 'sine',    vol: 0.11, delay: 0.02 });
+    },
+    kill() {
+      tone({ freq: 520, to: 130, dur: 0.30, type: 'triangle', vol: 0.10 });
+      tone({ freq: 260, to: 60,  dur: 0.34, type: 'sine',     vol: 0.08, delay: 0.03 });
+      noise({ dur: 0.22, freq: 2600, to: 300, vol: 0.07 });
+    },
+    gift() {
+      const notes = [783.99, 987.77, 1174.66, 1567.98];
+      notes.forEach((f, i) =>
+        tone({ freq: f, dur: 0.16, type: 'triangle', vol: 0.14, delay: i * 0.065 }));
+      tone({ freq: 2349.32, dur: 0.35, type: 'sine', vol: 0.09, delay: 0.27 });
+    },
+    loverJoin() {
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      notes.forEach((f, i) =>
+        tone({ freq: f, dur: 0.22, type: 'triangle', vol: 0.15, delay: i * 0.09 }));
+      tone({ freq: 1318.51, dur: 0.55, type: 'sine', vol: 0.12, delay: 0.38 });
+      tone({ freq: 261.63,  dur: 0.55, type: 'sine', vol: 0.08, delay: 0.38 });
+    },
+    exitOpen() {
+      const notes = [392.00, 523.25, 659.25, 880.00, 1174.66];
+      notes.forEach((f, i) =>
+        tone({ freq: f, dur: 0.30, type: 'triangle', vol: 0.13, delay: i * 0.10 }));
+      tone({ freq: 1567.98, dur: 0.80, type: 'sine', vol: 0.11, delay: 0.52 });
+      noise({ dur: 0.5, freq: 900, to: 4000, type: 'highpass', vol: 0.05, delay: 0.5 });
+    },
+    exitReached() {
+      tone({ freq: 880,     dur: 0.10, type: 'triangle', vol: 0.17 });
+      tone({ freq: 1174.66, dur: 0.10, type: 'triangle', vol: 0.17, delay: 0.08 });
+      tone({ freq: 1567.98, dur: 0.10, type: 'triangle', vol: 0.17, delay: 0.16 });
+      tone({ freq: 2093,    dur: 0.38, type: 'sine',     vol: 0.15, delay: 0.24 });
+    },
+    winMusic() {
+      const melody = [
+        [523.25, 0.16], [659.25, 0.16], [783.99, 0.16], [1046.50, 0.34],
+        [880.00, 0.16], [1046.50, 0.16], [1318.51, 0.44],
+        [1174.66, 0.16], [1318.51, 0.16], [1567.98, 0.58],
+        [2093.00, 1.05],
+      ];
+      let t = 0;
+      for (const [f, d] of melody) {
+        tone({ freq: f,     dur: d,       type: 'triangle', vol: 0.15, delay: t });
+        tone({ freq: f * 2, dur: d * 0.5, type: 'sine',     vol: 0.04, delay: t });
+        t += d * 0.82;
+      }
+      const bass = [[130.81, 0.62], [164.81, 0.62], [196.00, 0.62], [261.63, 0.92]];
+      let tb = 0;
+      for (const [f, d] of bass) {
+        tone({ freq: f,       dur: d,       type: 'sine',     vol: 0.09, delay: tb });
+        tone({ freq: f * 1.5, dur: d * 0.4, type: 'triangle', vol: 0.03, delay: tb });
+        tb += d * 0.85;
+      }
+      tone({ freq: 2093, dur: 1.0, type: 'sine', vol: 0.07, delay: t - 0.25 });
+    },
+    /* ★ 新增：两人到达粉色出口时的欢快音乐 */
+    
+	arrivalMusic() {
+      // 短促的欢快到达音乐（约 2 秒）
+      const fanfare = [
+        [523.25, 0.10], [659.25, 0.10], [783.99, 0.10], [1046.50, 0.22],
+        [880.00, 0.10], [1046.50, 0.10], [1318.51, 0.30],
+      ];
+      let t = 0;
+      for (const [f, d] of fanfare) {
+        tone({ freq: f,       dur: d,        type: 'square',   vol: 0.11, delay: t });
+        tone({ freq: f * 2,   dur: d * 0.45, type: 'triangle', vol: 0.05, delay: t });
+        tone({ freq: f * 0.5, dur: d * 0.9,  type: 'sine',     vol: 0.06, delay: t });
+        t += d * 0.88;
+      }
+      // 轻快跳跃和弦（缩短版）
+      const cheers = [659.25, 783.99, 1046.50, 1318.51];
+      let tc = t - 0.10;
+      for (const f of cheers) {
+        tone({ freq: f,       dur: 0.16, type: 'triangle', vol: 0.09, delay: tc });
+        tone({ freq: f * 1.5, dur: 0.12, type: 'sine',     vol: 0.04, delay: tc });
+        tc += 0.12;
+      }
+      // 收尾闪光（短）
+      tone({ freq: 1567.98, dur: 0.14, type: 'triangle', vol: 0.08, delay: tc });
+      tone({ freq: 2093.00, dur: 0.14, type: 'triangle', vol: 0.08, delay: tc + 0.10 });
+      tone({ freq: 2637.02, dur: 0.55, type: 'sine',     vol: 0.10, delay: tc + 0.20 });
+    },
+    step() {
+      tone({ freq: 170, to: 110, dur: 0.045, type: 'sine', vol: 0.035, atk: 0.005 });
+    },
+  };
+})();
+
+/* ============================================================
+   对话系统
+   ============================================================ */
+function startDialog(lines) {
+  for (const line of lines) {
+    G.dialogQueue.push({
+      speaker: line.speaker,
+      text: line.text,
+      duration: line.duration || CONFIG.dialogDuration,
+    });
+  }
+}
+
+function updateDialog(dt) {
+  if (G.dialogCurrent) {
+    G.dialogTimer -= dt;
+    if (G.dialogTimer <= 0) {
+      G.dialogCurrent = null;
+      G.dialogTimer = 0;
+    }
+  }
+  if (!G.dialogCurrent && G.dialogQueue.length > 0) {
+    G.dialogCurrent = G.dialogQueue.shift();
+    G.dialogTimer = G.dialogCurrent.duration || CONFIG.dialogDuration;
+  }
+}
+
+function getCharHeight(key) {
+  const im = IMG[key];
+  if (im && im.complete && im.naturalWidth > 0) {
+    return im.naturalHeight * CONFIG.charPixelScale;
+  }
+  return TILE * CONFIG.charScale;
+}
+
+function bubbleOverlapsOthers(bx, by, bw, bh, excludeSpeaker) {
+  const others = [];
+  if (excludeSpeaker !== 'player' && G.player) {
+    others.push({ x: G.player.x, y: G.player.y });
+  }
+  if (excludeSpeaker !== 'lover' && G.loverRevealed && G.lover) {
+    others.push({ x: G.lover.x, y: G.lover.y });
+  }
+  for (const m of G.monsters) {
+    if (m.state === 'alive' && m.discovered) {
+      others.push({ x: m.x, y: m.y });
+    }
+  }
+  const halfSize = TILE * 0.35;
+  for (const o of others) {
+    const ox = CONFIG.mapX + (o.x + 0.5) * TILE;
+    const oy = CONFIG.mapY + (o.y + 0.5) * TILE;
+    if (ox + halfSize > bx && ox - halfSize < bx + bw &&
+        oy + halfSize > by && oy - halfSize < by + bh) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function drawDialogBubble() {
+  const d = G.dialogCurrent;
+  if (!d) return;
+
+  let sx, sy, charKey;
+  if (d.speaker === 'player') {
+    sx = CONFIG.mapX + (G.player.x + 0.5) * TILE;
+    sy = CONFIG.mapY + (G.player.y + 0.5) * TILE;
+    charKey = 'player';
+  } else if (d.speaker === 'lover') {
+    sx = CONFIG.mapX + (G.lover.x + 0.5) * TILE;
+    sy = CONFIG.mapY + (G.lover.y + 0.5) * TILE;
+    charKey = 'lover';
+  } else {
+    return;
+  }
+  const charHalfH = getCharHeight(charKey) / 2;
+
+  ctx.font = `${CONFIG.dialogFontSize}px ${FONT}`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  const maxTextW = CONFIG.dialogMaxWidth - CONFIG.dialogPaddingX * 2;
+  const lines = wrapText(ctx, d.text, maxTextW);
+  let textW = 0;
+  for (const line of lines) {
+    textW = Math.max(textW, ctx.measureText(line).width);
+  }
+  const lineH = CONFIG.dialogFontSize * CONFIG.dialogLineHeight;
+  const textH = lines.length * lineH;
+  const bw = textW + CONFIG.dialogPaddingX * 2;
+  const bh = textH + CONFIG.dialogPaddingY * 2;
+
+  const tailSize = CONFIG.dialogTailSize;
+
+  const minX = 8;
+  const maxX = CSS_W - 8;
+  const minY = 8;
+  const maxY = UI_Y - 8;
+
+  let bx = sx - bw / 2;
+  let by = sy - charHalfH - tailSize - bh;
+  let tailDir = 'down';
+
+  let needFlip = (by < minY);
+  if (!needFlip && bubbleOverlapsOthers(bx, by, bw, bh, d.speaker)) {
+    needFlip = true;
+  }
+
+  if (needFlip) {
+    const byDown = sy + charHalfH + tailSize;
+    if (byDown + bh <= maxY) {
+      by = byDown;
+      tailDir = 'up';
+    } else {
+      by = Math.min(Math.max(by, minY), maxY - bh);
+      tailDir = 'down';
+    }
+  } else if (by < minY) {
+    by = minY;
+  }
+
+  if (bx < minX) bx = minX;
+  if (bx + bw > maxX) bx = maxX - bw;
+
+  let tailX = sx;
+  const minTailX = bx + CONFIG.dialogCornerR + tailSize + 4;
+  const maxTailX = bx + bw - CONFIG.dialogCornerR - tailSize - 4;
+  if (maxTailX < minTailX) {
+    tailX = bx + bw / 2;
+  } else {
+    if (tailX < minTailX) tailX = minTailX;
+    if (tailX > maxTailX) tailX = maxTailX;
+  }
+
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+
+  buildBubblePath(ctx, bx, by, bw, bh,
+                  CONFIG.dialogCornerR, tailX, tailDir, tailSize);
+
+  ctx.fillStyle = CONFIG.dialogBgColor;
+  ctx.fill();
+
+  ctx.strokeStyle = CONFIG.dialogBorderColor;
+  ctx.lineWidth = CONFIG.dialogBorderWidth;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  ctx.fillStyle = CONFIG.dialogTextColor;
+  ctx.font = `${CONFIG.dialogFontSize}px ${FONT}`;
+  ctx.textBaseline = 'top';
+  ctx.textAlign = CONFIG.dialogTextAlign;
+
+  let baseX;
+  if (CONFIG.dialogTextAlign === 'center')      baseX = bx + bw / 2;
+  else if (CONFIG.dialogTextAlign === 'right')  baseX = bx + bw - CONFIG.dialogPaddingX;
+  else                                          baseX = bx + CONFIG.dialogPaddingX;
+
+  const tx0 = baseX + CONFIG.dialogTextOffsetX;
+  let ty = by + CONFIG.dialogPaddingY + CONFIG.dialogTextOffsetY;
+  for (const line of lines) {
+    ctx.fillText(line, tx0, ty);
+    ty += lineH;
+  }
+
+  ctx.restore();
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+}
+
+/* ============================================================
+   寻路工具
+   ============================================================ */
+function isConnected(grid, start) {
+  const visited = new Uint8Array(COLS * ROWS);
+  const queue = [start.r * COLS + start.c];
+  visited[queue[0]] = 1;
+  let count = 1, head = 0;
+  while (head < queue.length) {
+    const cur = queue[head++];
+    const cc = cur % COLS, cr = Math.floor(cur / COLS);
+    for (const d of DIRS4) {
+      const nc = cc + d[0], nr = cr + d[1];
+      if (nc < 0 || nc >= COLS || nr < 0 || nr >= ROWS) continue;
+      if (grid[nr][nc] === 1) continue;
+      const ni = nr * COLS + nc;
+      if (visited[ni]) continue;
+      visited[ni] = 1; count++; queue.push(ni);
+    }
+  }
+  let total = 0;
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      if (grid[r][c] === 0) total++;
+  return count === total;
+}
+
+function hasLineOfSight(grid, c0, r0, c1, r1) {
+  let x = c0, y = r0;
+  const dx = Math.abs(c1 - c0), dy = Math.abs(r1 - r0);
+  const sx = c0 < c1 ? 1 : -1, sy = r0 < r1 ? 1 : -1;
+  let err = dx - dy, guard = 0;
+  while (guard++ < 200) {
+    if (x === c1 && y === r1) return true;
+    const e2 = 2 * err;
+    if (e2 > -dy) { err -= dy; x += sx; }
+    if (e2 < dx) { err += dx; y += sy; }
+    if (x < 0 || x >= COLS || y < 0 || y >= ROWS) return false;
+    if (x === c1 && y === r1) return true;
+    if (grid[y][x] === 1) return false;
+  }
+  return false;
+}
+
+function bfsPath(grid, sc, sr, tc, tr, blocked) {
+  if (sc === tc && sr === tr) return [];
+  const visited = new Uint8Array(COLS * ROWS);
+  const prev = new Int32Array(COLS * ROWS).fill(-1);
+  const startIdx = sr * COLS + sc;
+  const targetIdx = tr * COLS + tc;
+  visited[startIdx] = 1;
+  const queue = [startIdx];
+  let head = 0;
+  while (head < queue.length) {
+    const cur = queue[head++];
+    if (cur === targetIdx) {
+      const path = [];
+      let n = cur;
+      while (n !== startIdx) {
+        path.push({ c: n % COLS, r: Math.floor(n / COLS) });
+        n = prev[n];
+      }
+      path.reverse();
+      return path;
+    }
+    const cc = cur % COLS, cr = Math.floor(cur / COLS);
+    for (const d of DIRS4) {
+      const nc = cc + d[0], nr = cr + d[1];
+      if (nc < 0 || nc >= COLS || nr < 0 || nr >= ROWS) continue;
+      if (grid[nr][nc] === 1) continue;
+      if (blocked && blocked(nc, nr)) continue;
+      const ni = nr * COLS + nc;
+      if (visited[ni]) continue;
+      visited[ni] = 1; prev[ni] = cur; queue.push(ni);
+    }
+  }
+  return null;
+}
+
+function nearestWalkable(grid, c, r) {
+  c = clampC(c); r = clampR(r);
+  if (grid[r] && grid[r][c] === 0) return { c, r };
+  for (let rad = 1; rad < 14; rad++) {
+    for (let dr = -rad; dr <= rad; dr++) {
+      for (let dc = -rad; dc <= rad; dc++) {
+        const nc = c + dc, nr = r + dr;
+        if (nc < 0 || nc >= COLS || nr < 0 || nr >= ROWS) continue;
+        if (grid[nr][nc] === 0) return { c: nc, r: nr };
+      }
+    }
+  }
+  return null;
+}
+
+/* ============================================================
+   关卡生成
+   ============================================================ */
+/* ★ 修复：恋人最小距离 4 → 3，减少生成失败概率 */
+function placeLover(grid, player) {
+  const cands = [];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (grid[r][c] === 1) continue;
+      if (c === player.c && r === player.r) continue;
+      const d = distCells(c, r, player.c, player.r);
+      if (d < 3) continue;
+      cands.push({ c, r, d });
+    }
+  }
+  if (!cands.length) return null;
+  cands.sort((a, b) => b.d - a.d);
+  const top = cands.slice(0, Math.max(1, Math.floor(cands.length * 0.35)));
+  return choice(top);
+}
+
+function placeExit(grid, player, lover) {
+  const cands = [];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (grid[r][c] === 1) continue;
+      if (distCells(c, r, player.c, player.r) < 3) continue;
+      if (lover && distCells(c, r, lover.c, lover.r) < 2) continue;
+      cands.push({ c, r });
+    }
+  }
+  if (!cands.length) return null;
+  return choice(cands);
+}
+
+/* ★ 修复：尝试次数 400 → 600；最小可走 62 → 45，避免高密度下无法生成恋人 */
+function generateLevel() {
+  for (let attempt = 0; attempt < 600; attempt++) {
+    const density = attempt < 400 ? CONFIG.obstacleDensity : CONFIG.obstacleDensityLow;
+    const grid = [];
+    for (let r = 0; r < ROWS; r++) {
+      const row = [];
+      for (let c = 0; c < COLS; c++) row.push(Math.random() < density ? 1 : 0);
+      grid.push(row);
+    }
+    const walkable = [];
+    for (let r = 0; r < ROWS; r++)
+      for (let c = 0; c < COLS; c++)
+        if (grid[r][c] === 0) walkable.push({ c, r });
+    if (walkable.length < 45) continue;
+    if (!isConnected(grid, walkable[0])) continue;
+    const player = nearestWalkable(grid, Math.floor(COLS / 2), Math.floor(ROWS / 2));
+    if (!player) continue;
+    const lover = placeLover(grid, player);
+    if (!lover) continue;
+    const exit = placeExit(grid, player, lover);
+    if (!exit) continue;
+    return { grid, player, lover, exit };
+  }
+  const grid = [];
+  for (let r = 0; r < ROWS; r++) grid.push(new Array(COLS).fill(0));
+  return {
+    grid,
+    player: { c: 4, r: 6 },
+    lover:  { c: 1, r: 1 },
+    exit:   { c: 6, r: 11 },
+  };
+}
+
+/* ============================================================
+   怪物
+   ============================================================ */
+class Monster {
+  constructor(c, r, group, dropGift, giftType) {
+    this.c = c; this.r = r;
+    this.x = c; this.y = r;
+    this.group = group;
+    this.behavior = GROUP_DEFS[group].behavior;
+    this.state = 'alive';
+    this.discovered = false;
+    this.fade = 0;
+    this.deathT = 0;
+    this.knockDX = 0; this.knockDY = 0;
+    this.knockOff = 0;
+    this.dropGift = !!dropGift;
+    this.giftType = giftType || 0;
+    this.bob = Math.random() * Math.PI * 2;
+    this.homeC = c; this.homeR = r;
+    this.path = null; this.pathIdx = 0;
+    this.thinkCd = Math.random() * 0.4;
+    this.axis = Math.random() < 0.5 ? 'h' : 'v';
+    this.axisDir = Math.random() < 0.5 ? 1 : -1;
+    this.flip = false;
+  }
+
+  setPathTo(tc, tr) {
+    tc = clampC(tc); tr = clampR(tr);
+    if (G.grid[tr][tc] === 1) return false;
+    if (this.c === tc && this.r === tr) { this.path = null; return true; }
+    const blocked = (c, r) => (G.lover && G.lover.c === c && G.lover.r === r);
+    const p = bfsPath(G.grid, this.c, this.r, tc, tr, blocked);
+    if (p && p.length) { this.path = p; this.pathIdx = 0; return true; }
+    return false;
+  }
+
+  moveAlongPath(speed, dt) {
+    if (!this.path || this.pathIdx >= this.path.length) return;
+    const node = this.path[this.pathIdx];
+    if (G.lover && node.c === G.lover.c && node.r === G.lover.r) {
+      this.path = null;
+      return;
+    }
+    const dx = node.c - this.x, dy = node.r - this.y;
+    const d = Math.hypot(dx, dy);
+    const step = speed * dt;
+    if (d <= step) {
+      this.x = node.c; this.y = node.r;
+      this.c = node.c; this.r = node.r;
+      this.pathIdx++;
+      if (this.pathIdx >= this.path.length) this.path = null;
+    } else {
+      if (Math.abs(dx) > 0.02) this.flip = dx < 0;
+      this.x += dx / d * step;
+      this.y += dy / d * step;
+      this.c = Math.round(this.x);
+      this.r = Math.round(this.y);
+    }
+  }
+
+  randomTarget() {
+    for (let i = 0; i < 30; i++) {
+      const c = randInt(COLS), r = randInt(ROWS);
+      if (G.grid[r][c] === 0) return { c, r };
+    }
+    return null;
+  }
+
+  update(dt) {
+    if (G.phase !== 'playing') return;
+    const p = G.player;
+    this.bob += dt * 3;
+    this.thinkCd -= dt;
+
+    switch (this.behavior) {
+      case 'idle': {
+        if (!this.path || this.pathIdx >= this.path.length) {
+          if (this.thinkCd > 0) break;
+          this.thinkCd = 0.5 + Math.random() * 1.2;
+          const off = choice([[0,0],[1,0],[-1,0],[0,1],[0,-1]]);
+          const nc = this.homeC + off[0], nr = this.homeR + off[1];
+          if (nc >= 0 && nc < COLS && nr >= 0 && nr < ROWS && G.grid[nr][nc] === 0) {
+            this.setPathTo(nc, nr);
+          }
+        }
+        this.moveAlongPath(CONFIG.monsterIdleSpeed, dt);
+        break;
+      }
+      case 'roam': {
+        if (!this.path || this.pathIdx >= this.path.length) {
+          if (this.thinkCd > 0) break;
+          this.thinkCd = 0.3;
+          const t = this.randomTarget();
+          if (t) this.setPathTo(t.c, t.r);
+        }
+        this.moveAlongPath(CONFIG.monsterRoamSpeed, dt);
+        break;
+      }
+      case 'flee': {
+        const d = Math.hypot(this.x - p.x, this.y - p.y);
+        const sees = d < CONFIG.monsterDetectRange &&
+                     hasLineOfSight(G.grid, this.c, this.r, p.c, p.r);
+        if (sees) {
+          if (this.thinkCd <= 0 || !this.path) {
+            this.thinkCd = 0.4;
+            const dx = this.x - p.x, dy = this.y - p.y;
+            const dd = Math.hypot(dx, dy) || 1;
+            const tx = Math.round(this.x + dx / dd * 6);
+            const ty = Math.round(this.y + dy / dd * 6);
+            const t = nearestWalkable(G.grid, tx, ty);
+            if (t) this.setPathTo(t.c, t.r);
+          }
+          this.moveAlongPath(CONFIG.monsterFleeSpeed, dt);
+        } else {
+          if (!this.path || this.pathIdx >= this.path.length) {
+            if (this.thinkCd > 0) break;
+            this.thinkCd = 0.8;
+            const t = this.randomTarget();
+            if (t) this.setPathTo(t.c, t.r);
+          }
+          this.moveAlongPath(CONFIG.monsterIdleSpeed, dt);
+        }
+        break;
+      }
+      case 'axis': {
+        if (!this.path || this.pathIdx >= this.path.length) {
+          const dv = this.axis === 'h' ? [this.axisDir, 0] : [0, this.axisDir];
+          const nc = this.c + dv[0], nr = this.r + dv[1];
+          if (nc >= 0 && nc < COLS && nr >= 0 && nr < ROWS && G.grid[nr][nc] === 0) {
+            this.path = [{ c: nc, r: nr }];
+            this.pathIdx = 0;
+          } else {
+            if (Math.random() < 0.5) {
+              this.axis = this.axis === 'h' ? 'v' : 'h';
+            } else {
+              this.axisDir = -this.axisDir;
+            }
+          }
+        }
+        this.moveAlongPath(CONFIG.monsterAxisSpeed, dt);
+        break;
+      }
+      case 'follow': {
+        if (this.thinkCd <= 0) {
+          this.thinkCd = 0.35;
+          this.setPathTo(p.c, p.r);
+        }
+        this.moveAlongPath(CONFIG.monsterFollowSpeed, dt);
+        break;
+      }
+    }
+  }
+}
+
+/* ============================================================
+   全局游戏状态
+   ============================================================ */
+const G = {
+  grid: null,
+  explored: null,
+  player: null,
+  lover: null,
+  monsters: [],
+  pool: [],
+  gifts: [],
+  exit: null,
+  exitActive: false,
+
+  loverRevealed: false,
+  loverState: 'waiting',
+  loverTargetC: -1,
+  loverTargetR: -1,
+
+  collected: 0,
+  kills: 0,
+  elapsed: 0,
+  phase: 'playing',
+  pauseTimer: 0,
+  exitTimer: 0,
+
+  playerTrail: [],
+  exited: false,
+  endAnimT: 0,
+  confetti: [],
+  animT: 0,
+
+  hitFx: [],
+  playerKnock: null,
+
+  mousePath: null,
+  mousePathIdx: 0,
+  mousePathTargetC: -1,
+  mousePathTargetR: -1,
+
+  uiButtons: [],
+
+  dialogQueue: [],
+  dialogCurrent: null,
+  dialogTimer: 0,
+  dialogFlags: {
+    metLover: false,
+    gotAllGifts: false,
+    followLover: false,
+  },
+};
+
+function newGame() {
+  const level = generateLevel();
+  G.grid = level.grid;
+  G.explored = [];
+  for (let r = 0; r < ROWS; r++) G.explored.push(new Array(COLS).fill(false));
+
+  G.player = { c: level.player.c, r: level.player.r, x: level.player.c, y: level.player.r, move: null };
+  G.lover  = {
+    c: level.lover.c, r: level.lover.r,
+    x: level.lover.c, y: level.lover.r,
+  };
+  G.exit = level.exit;
+  G.exitActive = false;
+
+  G.loverRevealed = false;
+  G.loverState = 'waiting';
+  G.loverTargetC = -1;
+  G.loverTargetR = -1;
+
+  G.monsters = [];
+  G.gifts = [];
+  G.collected = 0;
+  G.kills = 0;
+  G.elapsed = 0;
+  G.phase = 'playing';
+  G.pauseTimer = 0;
+  G.exitTimer = 0;
+  G.playerTrail = [{ x: G.player.x, y: G.player.y }];
+  G.exited = false;
+  G.endAnimT = 0;
+  G.confetti = [];
+  G.animT = 0;
+  G.hitFx = [];
+  G.playerKnock = null;
+  G.mousePath = null;
+  G.mousePathIdx = 0;
+  G.mousePathTargetC = -1;
+  G.mousePathTargetR = -1;
+  G.uiButtons = [];
+
+  G.dialogQueue = [];
+  G.dialogCurrent = null;
+  G.dialogTimer = 0;
+  G.dialogFlags = {
+    metLover: false,
+    gotAllGifts: false,
+    followLover: false,
+  };
+
+  buildSceneCanvas();
+  memDirty = true;
+  lightDirty = true;
+  pendingSceneRebuild = false;
+  updateExplored();
+
+  const groups = [];
+  for (let g = 0; g < GROUP_DEFS.length; g++) {
+    for (let k = 0; k < 3; k++) groups.push(g);
+  }
+  shuffle(groups);
+
+  const dropIdx = new Set();
+  while (dropIdx.size < 3) dropIdx.add(randInt(CONFIG.monsterTotal));
+  const giftTypes = shuffle([0, 1, 2]);
+  let gi = 0;
+
+  G.pool = groups.map((grp, i) => {
+    const drop = dropIdx.has(i);
+    return {
+      group: grp,
+      drop: drop,
+      giftType: drop ? giftTypes[gi++] : 0,
+    };
+  });
+
+  let fillGuard = 0;
+  while (aliveMonsterCount() < CONFIG.maxMonsters && G.pool.length > 0 && fillGuard++ < 30) {
+    if (!spawnFromPool()) break;
+  }
+}
+
+/* ============================================================
+   怪物生成
+   ============================================================ */
+function aliveMonsterCount() {
+  let n = 0;
+  for (const m of G.monsters) if (m.state === 'alive') n++;
+  return n;
+}
+
+function findMonsterSpawn(minDist) {
+  const p = G.player;
+  const cands = [];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (G.grid[r][c] !== 0) continue;
+      if (distCells(c, r, p.c, p.r) < minDist) continue;
+      if (G.lover && c === G.lover.c && r === G.lover.r) continue;
+      let busy = false;
+      for (const m of G.monsters) {
+        if (m.state === 'alive' && m.c === c && m.r === r) { busy = true; break; }
+      }
+      if (busy) continue;
+      if (G.exit && c === G.exit.c && r === G.exit.r) continue;
+      cands.push({ c, r });
+    }
+  }
+  if (!cands.length) return null;
+  cands.sort((a, b) =>
+    distCells(b.c, b.r, p.c, p.r) - distCells(a.c, a.r, p.c, p.r));
+  const slice = cands.slice(0, Math.max(1, Math.floor(cands.length * 0.4)));
+  return choice(slice);
+}
+
+function findMonsterSpawnLoose() {
+  const p = G.player;
+  const cands = [];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (G.grid[r][c] !== 0) continue;
+      if (c === p.c && r === p.r) continue;
+      cands.push({ c, r });
+    }
+  }
+  if (!cands.length) return null;
+  return choice(cands);
+}
+
+function spawnFromPool() {
+  if (!G.pool.length) return false;
+  if (aliveMonsterCount() >= CONFIG.maxMonsters) return false;
+
+  const def = G.pool[0];
+
+  let pos = findMonsterSpawn(3);
+  if (!pos) pos = findMonsterSpawn(2);
+  if (!pos) pos = findMonsterSpawn(1);
+  if (!pos) pos = findMonsterSpawnLoose();
+
+  if (!pos) return false;
+
+  G.pool.shift();
+
+  const m = new Monster(pos.c, pos.r, def.group, def.drop, def.giftType);
+  if (G.explored[pos.r][pos.c]) {
+    m.discovered = true;
+    m.fade = 1;
+  }
+  G.monsters.push(m);
+  return true;
+}
+
+/* ============================================================
+   输入
+   ============================================================ */
+const mouse = { x: -1, y: -1, down: false };
+
+function updateMousePos(e) {
+  const r = canvas.getBoundingClientRect();
+  const sx = CSS_W / r.width;
+  const sy = CSS_H / r.height;
+  mouse.x = (e.clientX - r.left) * sx;
+  mouse.y = (e.clientY - r.top) * sy;
+}
+
+function hitButton(x, y) {
+  for (const b of G.uiButtons) {
+    if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) return b;
+  }
+  return null;
+}
+
+canvas.addEventListener('pointerdown', function (e) {
+  e.preventDefault();
+  Sound.resume();
+  updateMousePos(e);
+
+  const b = hitButton(mouse.x, mouse.y);
+  if (b) { b.action(); return; }
+
+  if (G.phase === 'win' || G.exited) return;
+  mouse.down = true;
+}, { passive: false });
+
+/* ★ 修复：pointermove / touchmove 统一处理，触摸事件从 touches[0] 取坐标，
+   避免 NaN 导致游戏循环崩溃 */
+function handleMove(e) {
+  if (!mouse.down) return;
+  if (e.cancelable) e.preventDefault();
+
+  if (typeof e.clientX === 'number' && typeof e.clientY === 'number') {
+    updateMousePos(e);
+  } else if (e.touches && e.touches.length > 0) {
+    updateMousePos(e.touches[0]);
+  }
+}
+
+canvas.addEventListener('pointermove', handleMove, { passive: false });
+canvas.addEventListener('touchmove',   handleMove, { passive: false });
+
+canvas.addEventListener('pointerup',     function () { mouse.down = false; });
+canvas.addEventListener('pointercancel', function () { mouse.down = false; });
+canvas.addEventListener('pointerleave',  function () { mouse.down = false; });
+
+canvas.addEventListener('touchstart', function (e) {
+  if (e.touches.length > 1) e.preventDefault();
+}, { passive: false });
+
+/* ============================================================
+   基础查询
+   ============================================================ */
+function canWalk(c, r) {
+  if (c < 0 || c >= COLS || r < 0 || r >= ROWS) return false;
+  return G.grid[r][c] === 0;
+}
+
+function getPlayerLightRadius() {
+  return Math.min(
+    CONFIG.playerLightRadius + G.collected * CONFIG.playerLightRadiusPerSource,
+    CONFIG.maxPlayerLightRadius
+  );
+}
+
+/* ★ 优化：探索只置脏标记，避免连锁重建 */
+function updateExplored() {
+  const R = getPlayerLightRadius();
+  const px = G.player.x, py = G.player.y;
+  let changed = false;
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (G.explored[r][c]) continue;
+      if (Math.hypot(c - px, r - py) <= R) {
+        G.explored[r][c] = true;
+        changed = true;
+      }
+    }
+  }
+  if (changed) memDirty = true;
+}
+
+/* ============================================================
+   玩家移动
+   ============================================================ */
+function tryMouseMove() {
+  const p = G.player;
+  if (mouse.x < CONFIG.mapX || mouse.x >= CONFIG.mapX + MAP_W) return false;
+  if (mouse.y < CONFIG.mapY || mouse.y >= CONFIG.mapY + MAP_H) return false;
+
+  const mc = Math.floor((mouse.x - CONFIG.mapX) / TILE);
+  const mr = Math.floor((mouse.y - CONFIG.mapY) / TILE);
+  if (!canWalk(mc, mr)) return false;
+  if (mc === p.c && mr === p.r) { G.mousePath = null; return false; }
+
+  if (G.mousePath && (G.mousePathTargetC !== mc || G.mousePathTargetR !== mr)) {
+    G.mousePath = null;
+  }
+  if (!G.mousePath) {
+    const path = bfsPath(G.grid, p.c, p.r, mc, mr);
+    if (!path || path.length === 0) return false;
+    G.mousePath = path;
+    G.mousePathIdx = 0;
+    G.mousePathTargetC = mc;
+    G.mousePathTargetR = mr;
+  }
+
+  while (G.mousePath && G.mousePathIdx < G.mousePath.length) {
+    const node = G.mousePath[G.mousePathIdx];
+    if (Math.abs(node.c - p.c) + Math.abs(node.r - p.r) !== 1 || !canWalk(node.c, node.r)) {
+      G.mousePath = null;
+      return false;
+    }
+    G.mousePathIdx++;
+    p.move = { c: node.c, r: node.r, x: node.c, y: node.r };
+    return true;
+  }
+  return false;
+}
+
+/* ★ 优化：光照层每 2 帧重建一次，玩家移动时实时跟随，静止时不重建 */
+function updatePlayer(dt) {
+  const p = G.player;
+  if (p.move) {
+    lightFrame++;
+    if (lightFrame % 2 === 0) lightDirty = true;
+    const speed = CONFIG.playerSpeed * CONFIG.baseTilesPerSec;
+    const dx = p.move.x - p.x, dy = p.move.y - p.y;
+    const d = Math.hypot(dx, dy);
+    const step = speed * dt;
+    if (d <= step) {
+      p.x = p.move.x; p.y = p.move.y;
+      p.c = p.move.c; p.r = p.move.r;
+      p.move = null;
+      lightDirty = true;
+      Sound.step();
+    } else {
+      p.x += dx / d * step;
+      p.y += dy / d * step;
+    }
+    return;
+  }
+
+  if (mouse.down) {
+    tryMouseMove();
+  }
+}
+
+function updatePlayerTrail() {
+  const t = G.playerTrail;
+  const last = t[t.length - 1];
+  if (!last || Math.hypot(G.player.x - last.x, G.player.y - last.y) > 0.12) {
+    t.push({ x: G.player.x, y: G.player.y });
+    if (t.length > 600) t.shift();
+  }
+}
+
+function pointOnTrail(trail, backDist) {
+  let need = backDist;
+  for (let i = trail.length - 1; i > 0; i--) {
+    const a = trail[i], b = trail[i - 1];
+    const d = Math.hypot(a.x - b.x, a.y - b.y);
+    if (d >= need) {
+      const t = d === 0 ? 0 : need / d;
+      return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+    }
+    need -= d;
+  }
+  return { x: trail[0].x, y: trail[0].y };
+}
+
+/* ============================================================
+   恋人逻辑
+   ============================================================ */
+function snapLoverToCell() {
+  const L = G.lover;
+  if (G.grid[L.r] && G.grid[L.r][L.c] === 0) {
+    L.x = L.c; L.y = L.r;
+    return;
+  }
+  const w = nearestWalkable(G.grid, L.c, L.r);
+  if (w) {
+    L.c = w.c; L.r = w.r;
+    L.x = w.c; L.y = w.r;
+  } else {
+    L.x = L.c; L.y = L.r;
+  }
+}
+
+function updateLover(dt) {
+  const L = G.lover;
+  const p = G.player;
+
+  if (!G.loverRevealed) {
+    const d = Math.hypot(p.x - L.x, p.y - L.y);
+    if (d <= CONFIG.loverRevealDist) {
+      G.loverRevealed = true;
+      if (G.collected >= 3) {
+        G.loverState = 'waiting';
+      } else {
+        G.loverState = 'reluctant';
+        if (!G.dialogFlags.metLover) {
+          G.dialogFlags.metLover = true;
+          startDialog([
+            { speaker: 'player', text: '怎么大晚上在外面晃荡？' },
+            { speaker: 'lover',  text: '我们在找十字架……' },
+          ]);
+        }
+      }
+    }
+    return;
+  }
+
+  if (G.collected >= 3) {
+    if (G.loverState !== 'following') {
+      G.loverState = 'waiting';
+      G.loverTargetC = -1;
+      G.loverTargetR = -1;
+      snapLoverToCell();
+      const d = Math.hypot(L.x - p.x, L.y - p.y);
+      if (d <= CONFIG.loverFollowDist) {
+        G.loverState = 'following';
+        Sound.loverJoin();
+        if (!G.dialogFlags.followLover) {
+          G.dialogFlags.followLover = true;
+          startDialog([
+            { speaker: 'player', text: 'BanBan，papa，跟我回家吧。' },
+            { speaker: 'lover',  text: '小醒，走吧！' },
+          ]);
+        }
+      }
+    }
+    if (G.loverState === 'following') {
+      const tgt = pointOnTrail(G.playerTrail, CONFIG.loverFollowDist);
+      const dx = tgt.x - L.x, dy = tgt.y - L.y;
+      const d = Math.hypot(dx, dy);
+      if (d < 0.006) {
+        L.x = tgt.x; L.y = tgt.y;
+        L.c = Math.round(L.x); L.r = Math.round(L.y);
+        return;
+      }
+      const step = CONFIG.loverWalkSpeed * dt;
+      if (d <= step) {
+        L.x = tgt.x; L.y = tgt.y;
+      } else {
+        L.x += dx / d * step;
+        L.y += dy / d * step;
+      }
+      L.c = Math.round(L.x);
+      L.r = Math.round(L.y);
+    }
+    return;
+  }
+
+  if (G.loverState === 'reluctant') {
+    if (G.loverTargetC >= 0) {
+      if (G.player.c === G.loverTargetC && G.player.r === G.loverTargetR) {
+        L.c = Math.round(L.x);
+        L.r = Math.round(L.y);
+        G.loverTargetC = -1;
+        G.loverTargetR = -1;
+      }
+    }
+
+    if (G.loverTargetC >= 0) {
+      const step = CONFIG.loverFleeSpeed * dt;
+      const dx = G.loverTargetC - L.x;
+      const dy = G.loverTargetR - L.y;
+      const d2 = Math.hypot(dx, dy);
+      if (d2 <= step) {
+        L.x = G.loverTargetC;
+        L.y = G.loverTargetR;
+        L.c = G.loverTargetC;
+        L.r = G.loverTargetR;
+        G.loverTargetC = -1;
+        G.loverTargetR = -1;
+      } else {
+        L.x += dx / d2 * step;
+        L.y += dy / d2 * step;
+      }
+      return;
+    }
+
+    const d = Math.hypot(L.x - p.x, L.y - p.y);
+    if (d >= CONFIG.loverFleeDist) {
+      if (Math.hypot(L.x - L.c, L.y - L.r) > 0.01) snapLoverToCell();
+      return;
+    }
+
+    let bestDir = null;
+    let bestDist = d;
+    let adjacentFree = 0;
+    for (const dir of DIRS4) {
+      const nc = L.c + dir[0], nr = L.r + dir[1];
+      if (nc < 0 || nc >= COLS || nr < 0 || nr >= ROWS) continue;
+      if (G.grid[nr][nc] === 1) continue;
+      if (nc === p.c && nr === p.r) continue;
+      adjacentFree++;
+      const nd = Math.hypot(nc - p.x, nr - p.y);
+      if (nd > bestDist) {
+        bestDist = nd;
+        bestDir = { c: nc, r: nr };
+      }
+    }
+
+    if (adjacentFree === 0) {
+      const oldLc = L.c, oldLr = L.r;
+      L.c = p.c; L.r = p.r;
+      L.x = p.x; L.y = p.y;
+      p.c = oldLc; p.r = oldLr;
+      p.x = oldLc; p.y = oldLr;
+      G.loverTargetC = -1;
+      G.loverTargetR = -1;
+      G.playerTrail = [{ x: p.x, y: p.y }];
+      p.move = null;
+      G.mousePath = null;
+      lightDirty = true;
+      return;
+    }
+
+    if (bestDir) {
+      G.loverTargetC = bestDir.c;
+      G.loverTargetR = bestDir.r;
+    } else {
+      if (Math.hypot(L.x - L.c, L.y - L.r) > 0.01) snapLoverToCell();
+    }
+  }
+}
+
+/* ============================================================
+   怪物更新
+   ============================================================ */
+function updateMonsters(dt) {
+  const p = G.player;
+
+  for (const m of G.monsters) {
+    if (m.state === 'dying') {
+      m.deathT += dt;
+      const kp = Math.min(1, m.deathT / 0.35);
+      m.knockOff = CONFIG.knockbackDist * easeOutCubic(kp);
+      if (m.deathT >= CONFIG.monsterDeathTime) {
+        m.state = 'dead';
+        if (m.dropGift) spawnGiftFrom(m.c, m.r, m.giftType);
+      }
+      continue;
+    }
+
+    if (m.state !== 'alive') continue;
+
+    if (m.fade < 1) {
+      m.fade = Math.min(1, m.fade + dt / CONFIG.monsterFadeIn);
+    }
+
+    if (!m.discovered) {
+      const d = Math.hypot(m.x - p.x, m.y - p.y);
+      if (d <= getPlayerLightRadius() + 0.4) {
+        if (hasLineOfSight(G.grid, p.c, p.r, m.c, m.r)) {
+          m.discovered = true;
+        }
+      }
+    }
+
+    m.update(dt);
+  }
+
+  for (let i = G.monsters.length - 1; i >= 0; i--) {
+    if (G.monsters[i].state === 'dead') G.monsters.splice(i, 1);
+  }
+
+  let guard = 0;
+  while (aliveMonsterCount() < CONFIG.maxMonsters && G.pool.length > 0 && guard++ < 30) {
+    if (!spawnFromPool()) break;
+  }
+}
+
+/* ============================================================
+   击打怪物
+   ============================================================ */
+function hitMonster(m) {
+  if (m.state !== 'alive') return;
+
+  m.state = 'dying';
+  m.deathT = 0;
+  m.discovered = true;
+  m.fade = 1;
+
+  const dx = m.x - G.player.x, dy = m.y - G.player.y;
+  const d = Math.hypot(dx, dy) || 1;
+  m.knockDX = dx / d;
+  m.knockDY = dy / d;
+  m.knockOff = 0;
+
+  G.playerKnock = {
+    dx: -dx / d, dy: -dy / d,
+    t: 0, dur: CONFIG.playerKnockTime,
+    dist: CONFIG.playerKnockDist,
+    ox: 0, oy: 0,
+  };
+
+  G.hitFx.push({
+    x: (m.x + G.player.x) / 2,
+    y: (m.y + G.player.y) / 2,
+    t: 0,
+    dur: 0.32,
+  });
+
+  G.kills++;
+
+  Sound.hit();
+  setTimeout(function () { Sound.kill(); }, 60);
+}
+
+function updateHitFx(dt) {
+  for (let i = G.hitFx.length - 1; i >= 0; i--) {
+    const f = G.hitFx[i];
+    f.t += dt;
+    if (f.t >= f.dur) G.hitFx.splice(i, 1);
+  }
+  if (G.playerKnock) {
+    G.playerKnock.t += dt;
+    const k = G.playerKnock;
+    const pp = Math.min(1, k.t / k.dur);
+    const off = k.dist * (1 - pp) * (1 - pp);
+    k.ox = k.dx * off;
+    k.oy = k.dy * off;
+    if (pp >= 1) G.playerKnock = null;
+  }
+}
+
+/* ============================================================
+   礼物
+   ============================================================ */
+function spawnGiftFrom(c, r, type) {
+  const neighbors = shuffle(DIRS8.slice());
+  for (const d of neighbors) {
+    const nc = c + d[0], nr = r + d[1];
+    if (nc < 0 || nc >= COLS || nr < 0 || nr >= ROWS) continue;
+    if (G.grid[nr][nc] === 1) continue;
+    if (G.lover && nc === G.lover.c && nr === G.lover.r) continue;
+    G.gifts.push({
+      c: nc, r: nr, type: type,
+      startC: c, startR: r,
+      x: c, y: r,
+      t: 0, dur: CONFIG.giftBounceTime,
+      landed: false, picked: false, pickT: 0,
+    });
+    return;
+  }
+  G.gifts.push({
+    c: c, r: r, type: type,
+    startC: c, startR: r,
+    x: c, y: r,
+    t: 0, dur: CONFIG.giftBounceTime,
+    landed: false, picked: false, pickT: 0,
+  });
+}
+
+function updateGifts(dt) {
+  const p = G.player;
+  for (let i = G.gifts.length - 1; i >= 0; i--) {
+    const g = G.gifts[i];
+
+    if (!g.landed) {
+      g.t += dt;
+      const k = Math.min(1, g.t / g.dur);
+      const e = easeOutCubic(k);
+      g.x = g.startC + (g.c - g.startC) * e;
+      g.y = g.startR + (g.r - g.startR) * e;
+      if (k >= 1) { g.landed = true; g.x = g.c; g.y = g.r; }
+      continue;
+    }
+
+    if (!g.picked && g.c === p.c && g.r === p.r) {
+      g.picked = true;
+      g.pickT = 0;
+      G.collected++;
+      lightDirty = true;
+      Sound.gift();
+      if (G.collected >= 3) onAllGiftsCollected();
+    }
+
+    if (g.picked) {
+      g.pickT += dt;
+      if (g.pickT >= CONFIG.giftPickTime) G.gifts.splice(i, 1);
+    }
+  }
+}
+
+function onAllGiftsCollected() {
+  G.exitActive = true;
+  Sound.exitOpen();
+  if (!G.dialogFlags.gotAllGifts) {
+    G.dialogFlags.gotAllGifts = true;
+    startDialog([
+      { speaker: 'player', text: '都找到了！去找它们吧。' },
+    ]);
+  }
+}
+
+/* ============================================================
+   碰撞 / 胜负
+   ============================================================ */
+function checkCollisions() {
+  const invuln = G.playerKnock && G.playerKnock.t < G.playerKnock.dur;
+  if (!invuln) {
+    for (const m of G.monsters) {
+      if (m.state !== 'alive') continue;
+      const kp = m.knockOff || 0;
+      const mx = m.x + m.knockDX * kp;
+      const my = m.y + m.knockDY * kp;
+      if (Math.hypot(mx - G.player.x, my - G.player.y) < CONFIG.touchDist) {
+        hitMonster(m);
+        break;
+      }
+    }
+  }
+
+  if (G.exitActive && G.phase === 'playing') {
+    const e = G.exit;
+    const dP = Math.hypot(G.player.x - e.c, G.player.y - e.r);
+    const dL = Math.hypot(G.lover.x - e.c, G.lover.y - e.r);
+    if (dP < 0.75 && dL < 1.8 && G.loverState === 'following') {
+      startExitSequence();
+    }
+  }
+}
+
+function startExitSequence() {
+  G.phase = 'exitSnap';
+  G.exitTimer = 0;
+  G.dialogQueue = [];
+  G.dialogCurrent = null;
+  G.dialogTimer = 0;
+  Sound.exitReached();
+}
+
+/* ★ 到达出口时播放欢快音乐 */
+function updateExitSequence(dt) {
+  const e = G.exit;
+  const off = CONFIG.exitOffset;
+
+  if (G.phase === 'exitSnap') {
+    G.exitTimer += dt;
+    const t = Math.min(1, G.exitTimer / CONFIG.exitSnapTime);
+    const sx = G.player.x, sy = G.player.y;
+    const tx = e.c - off, ty = e.r;
+    G.player.x = sx + (tx - sx) * t;
+    G.player.y = sy + (ty - sy) * t;
+    if (t >= 1) {
+      G.player.x = tx; G.player.y = ty;
+      G.player.c = e.c; G.player.r = e.r;
+      G.phase = 'exitStand';
+      G.exitTimer = 0;
+      lightDirty = true;
+    }
+    return;
+  }
+
+  if (G.phase === 'exitStand') {
+    G.exitTimer += dt;
+    const t = Math.min(1, G.exitTimer / 0.4);
+    const sx = G.lover.x, sy = G.lover.y;
+    const tx = e.c + off, ty = e.r;
+    G.lover.x = sx + (tx - sx) * t;
+    G.lover.y = sy + (ty - sy) * t;
+    if (t >= 1) {
+      G.lover.x = tx; G.lover.y = ty;
+      G.lover.c = e.c; G.lover.r = e.r;
+      G.phase = 'exitFinal';
+      G.pauseTimer = CONFIG.exitFinalPause;
+      Sound.arrivalMusic();   // ★ 两人站定时播放欢快音乐
+    }
+    return;
+  }
+}
+
+/* ============================================================
+   礼花
+   ============================================================ */
+function spawnConfetti() {
+  G.confetti = [];
+  const W = CONFIG.canvasW;
+  const H = CONFIG.canvasH;
+  const colors = [
+    '#ff6ab4', '#ed6296', '#ffd23f', '#ff4da5',
+    '#00ff88', '#4b7f30', '#a1cd00', '#ffe9c9', '#dc2764'
+  ];
+  const cx = W / 2, cy = H / 2;
+  for (let i = 0; i < CONFIG.confettiCount; i++) {
+    const side = Math.random() < 0.5 ? -1 : 1;
+    const vx = side * (60 + Math.random() * 340);
+    const vy = -240 - Math.random() * 240;
+    const startX = cx + side * (10 + Math.random() * 50);
+    const startY = cy + (Math.random() - 0.5) * 60;
+    G.confetti.push({
+      x: startX, y: startY, vx: vx, vy: vy,
+      size: 6 + Math.random() * 8,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rot: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 6,
+      life: 0,
+    });
+  }
+}
+
+function updateConfetti(dt) {
+  for (let i = G.confetti.length - 1; i >= 0; i--) {
+    const p = G.confetti[i];
+    p.vy += CONFIG.confettiGravity * dt;
+    p.vx *= 0.995;
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.rot += p.rotSpeed * dt;
+    p.life += dt;
+    if (p.y > CONFIG.canvasH + 60 || p.life > CONFIG.confettiLife) {
+      G.confetti.splice(i, 1);
+    }
+  }
+}
+
+function drawConfetti() {
+  for (const p of G.confetti) {
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rot);
+    ctx.fillStyle = p.color;
+    ctx.fillRect(-p.size / 2, -p.size / 3, p.size, p.size * 0.66);
+    ctx.restore();
+  }
+}
+
+/* ============================================================
+   主更新
+   ============================================================ */
+function update(dt) {
+  if (G.exited) return;
+  G.animT += dt;
+
+  if (G.phase === 'win') {
+    G.endAnimT += dt;
+    updateConfetti(dt);
+    updateHitFx(dt);
+    return;
+  }
+
+  updateDialog(dt);
+
+  if (G.pauseTimer > 0) {
+    G.pauseTimer -= dt;
+    if (G.pauseTimer <= 0) {
+      G.pauseTimer = 0;
+      if (G.phase === 'exitFinal') {
+        G.phase = 'win';
+        G.endAnimT = 0;
+        spawnConfetti();
+        Sound.winMusic();
+        return;
+      }
+    }
+    return;
+  }
+
+  if (G.phase === 'exitSnap' || G.phase === 'exitStand') {
+    updateExitSequence(dt);
+    return;
+  }
+  if (G.phase !== 'playing') return;
+
+  G.elapsed += dt;
+  updatePlayer(dt);
+  updatePlayerTrail();
+  updateLover(dt);
+  updateExplored();
+  updateMonsters(dt);
+  updateGifts(dt);
+  updateHitFx(dt);
+  checkCollisions();
+}
+
+/* ============================================================
+   绘制：地图底层
+   ============================================================ */
+function drawFloorTile(c, x, y) {
+  c.fillStyle = CONFIG.floorColor;
+  c.fillRect(x, y, TILE, TILE);
+}
+
+function grassTypeFor(cIdx, rIdx) {
+  const n = ((cIdx + 1) * 73856093) ^ ((rIdx + 1) * 19349663);
+  const v = ((n >>> 0) % 1000) / 1000;
+  if (v < 0.40) return 0;
+  if (v < 0.60) return 1;
+  if (v < 0.80) return 2;
+  return 3;
+}
+
+function drawGrass(c, x, y, cIdx, rIdx, alpha) {
+  const im = IMG.grass;
+  if (!im || !im.complete || im.naturalWidth === 0) return;
+
+  const type = grassTypeFor(cIdx, rIdx);
+  const col = type % 2;
+  const row = Math.floor(type / 2);
+
+  const cw = im.naturalWidth / GRASS_COLS;
+  const ch = im.naturalHeight / GRASS_ROWS;
+  const sx = Math.floor(col * cw);
+  const sy = Math.floor(row * ch);
+  const sw = Math.max(1, Math.floor(cw));
+  const sh = Math.max(1, Math.floor(ch));
+  const scale = CONFIG.grassPixelScale;
+  const dw = sw * scale;
+  const dh = sh * scale;
+  const dx = x + (TILE - dw) / 2;
+  const dy = y + (TILE - dh) / 2;
+
+  c.save();
+  c.globalAlpha = (alpha == null ? 1 : alpha);
+  c.imageSmoothingEnabled = false;
+  c.drawImage(im, sx, sy, sw, sh,
+              Math.round(dx), Math.round(dy),
+              Math.round(dw), Math.round(dh));
+  c.restore();
+}
+
+function drawObstacle(c, x, y, alpha, cIdx, rIdx) {
+  const im = IMG.obstacles;
+  if (!im || !im.complete || im.naturalWidth === 0) return;
+
+  const cols = OBSTACLE_COLS;
+  const cw = im.naturalWidth / cols;
+  const ch = im.naturalHeight / OBSTACLE_ROWS;
+  const idx = (rIdx * COLS + cIdx) % 3;
+  const sx = Math.floor(idx * cw);
+  const sy = 0;
+  const sw = Math.max(1, Math.floor(cw));
+  const sh = Math.max(1, Math.floor(ch));
+  const scale = CONFIG.obstaclePixelScale;
+  const dw = sw * scale;
+  const dh = sh * scale;
+  const dx = x + (TILE - dw) / 2;
+  const dy = y + (TILE - dh) / 2;
+  c.save();
+  c.globalAlpha = (alpha == null ? 1 : alpha);
+  c.imageSmoothingEnabled = false;
+  c.drawImage(im, sx, sy, sw, sh,
+              Math.round(dx), Math.round(dy),
+              Math.round(dw), Math.round(dh));
+  c.restore();
+}
+
+function buildSceneCanvas() {
+  const c = sceneCtx;
+  c.clearRect(0, 0, MAP_W, MAP_H);
+  for (let r = 0; r < ROWS; r++) {
+    for (let col = 0; col < COLS; col++) {
+      const x = col * TILE;
+      const y = r * TILE;
+      drawFloorTile(c, x, y);
+      drawGrass(c, x, y, col, r, 1);
+    }
+  }
+  for (let r = 0; r < ROWS; r++) {
+    for (let col = 0; col < COLS; col++) {
+      if (G.grid[r][col] === 1) drawObstacle(c, col * TILE, r * TILE, 1, col, r);
+    }
+  }
+}
+
+function buildMemoryLayer() {
+  const c = memCtx;
+  c.clearRect(0, 0, MAP_W, MAP_H);
+  for (let r = 0; r < ROWS; r++) {
+    for (let col = 0; col < COLS; col++) {
+      if (!G.explored[r][col]) continue;
+      const x = col * TILE;
+      const y = r * TILE;
+
+      c.globalAlpha = CONFIG.exploredGroundAlpha;
+      drawFloorTile(c, x, y);
+      drawGrass(c, x, y, col, r, 1);
+      c.globalAlpha = 1;
+
+      if (G.grid[r][col] === 1) {
+        drawObstacle(c, x, y, 1, col, r);
+      }
+    }
+  }
+}
+
+function buildMask() {
+  const m = maskCtx;
+  m.globalCompositeOperation = 'source-over';
+  m.clearRect(0, 0, MASK_W, MASK_H);
+  m.globalCompositeOperation = 'lighter';
+
+  const S = MASK_SCALE;
+  const pr = Math.max(1, getPlayerLightRadius() * TILE * S);
+  const cx = (G.player.x + 0.5) * TILE * S;
+  const cy = (G.player.y + 0.5) * TILE * S;
+  const g = m.createRadialGradient(cx, cy, 0, cx, cy, pr);
+  g.addColorStop(0,    'rgba(255,246,200,1)');
+  g.addColorStop(0.55, 'rgba(255,246,200,0.72)');
+  g.addColorStop(1,    'rgba(255,246,200,0)');
+  m.fillStyle = g;
+  m.fillRect(cx - pr, cy - pr, pr * 2, pr * 2);
+
+  m.globalCompositeOperation = 'source-over';
+}
+
+function buildLightLayer() {
+  const lc = lightCtx;
+  lc.globalCompositeOperation = 'source-over';
+  lc.clearRect(0, 0, MAP_W, MAP_H);
+  lc.drawImage(sceneCanvas, 0, 0);
+  lc.globalCompositeOperation = 'destination-in';
+  lc.drawImage(maskCanvas, 0, 0, MAP_W, MAP_H);
+  lc.globalCompositeOperation = 'source-over';
+}
+
+function buildDecorLayer() {
+  const c = decorCtx;
+  c.imageSmoothingEnabled = false;
+  c.clearRect(0, 0, CSS_W, CSS_H);
+  const W = CONFIG.canvasW, H = CONFIG.canvasH;
+  const S = CONFIG.pixelScale;
+
+  if (imgReady('middle')) {
+    const mid = IMG.middle;
+    const w = CONFIG.middleStretchW;
+    const h = mid.naturalHeight * S;
+    c.drawImage(mid, Math.round((W - w) / 2), Math.round(H - h), w, h);
+  }
+  if (imgReady('left')) {
+    const l = IMG.left;
+    const w = l.naturalWidth * S;
+    const h = l.naturalHeight * S;
+    c.drawImage(l, 0, Math.round(H - h), w, h);
+  }
+  if (imgReady('right')) {
+    const r = IMG.right;
+    const w = r.naturalWidth * S;
+    const h = r.naturalHeight * S;
+    c.drawImage(r, Math.round(W - w), Math.round(H - h), w, h);
+  }
+  if (imgReady('total')) {
+    const im = IMG.total;
+    const tS = 2;                              // ★ TITLE 放大 2 倍
+    const w = im.naturalWidth  * tS;
+    const h = im.naturalHeight * tS;
+    c.drawImage(im, Math.round((W - w) / 2), 6, w, h);
+  }
+  else {
+    c.save();
+    c.textBaseline = 'middle';
+    c.font = `${CONFIG.titleFontSize}px ${FONT}`;
+    drawSpacedTitle(c, CONFIG.titleText, W / 2, CONFIG.titleY,
+                    CONFIG.titleLetterSpacing, CONFIG.titleColor);
+    c.restore();
+  }
+}
+
+/* ============================================================
+   绘制：精灵
+   ============================================================ */
+function drawSprite(c, key, px, py, fallbackFn, defSize, alphaOverride) {
+  const im = IMG[key];
+  c.save();
+  if (alphaOverride != null) c.globalAlpha *= alphaOverride;
+  if (im && im.complete && im.naturalWidth > 0) {
+    const size  = im.naturalWidth  * CONFIG.charPixelScale;
+    const sizeH = im.naturalHeight * CONFIG.charPixelScale;
+    const dx = Math.round(px - size  / 2);
+    const dy = Math.round(py - sizeH / 2);
+    c.drawImage(im, dx, dy, size, sizeH);
+  } else {
+    fallbackFn(c, px, py, defSize);
+  }
+  c.restore();
+}
+
+function drawSpriteCell(c, key, row, col, rows, cols, cx, cy, drawH, alpha, flip) {
+  const im = IMG[key];
+  if (!im || !im.complete || im.naturalWidth === 0) return false;
+  const cw = im.naturalWidth / cols;
+  const ch = im.naturalHeight / rows;
+  const sx = Math.floor(col * cw);
+  const sy = Math.floor(row * ch);
+  const sw = Math.max(1, Math.floor(cw));
+  const sh = Math.max(1, Math.floor(ch));
+  const dh = drawH;
+  const dw = dh * (cw / ch);
+
+  c.save();
+  c.globalAlpha *= (alpha == null ? 1 : alpha);
+  c.imageSmoothingEnabled = false;
+  c.translate(Math.round(cx), Math.round(cy));
+  if (flip) c.scale(-1, 1);
+  c.drawImage(im, sx, sy, sw, sh,
+              Math.round(-dw / 2), Math.round(-dh / 2),
+              Math.round(dw), Math.round(dh));
+  c.restore();
+  return true;
+}
+
+function fallbackChar(c, px, py, size, bodyColor, strokeColor, eyeColor) {
+  const r = size / 2 - 3;
+  c.beginPath();
+  c.arc(px, py, r, 0, Math.PI * 2);
+  c.fillStyle = bodyColor;
+  c.fill();
+  c.lineWidth = 3;
+  c.strokeStyle = strokeColor;
+  c.stroke();
+  c.fillStyle = eyeColor;
+  c.beginPath(); c.arc(px - r * 0.3, py - r * 0.15, r * 0.14, 0, Math.PI * 2); c.fill();
+  c.beginPath(); c.arc(px + r * 0.3, py - r * 0.15, r * 0.14, 0, Math.PI * 2); c.fill();
+}
+function fallbackPlayer(c, px, py, size) { fallbackChar(c, px, py, size, '#ffd166', '#8a5a2b', '#4a2a10'); }
+function fallbackLover(c, px, py, size)  { fallbackChar(c, px, py, size, '#ff9fd0', '#b04a80', '#7a2a52'); }
+
+function fallbackMonster(c, px, py, size, color) {
+  const r = size / 2 - 3;
+  c.beginPath();
+  c.arc(px, py - r * 0.12, r, Math.PI, 0);
+  const bottom = py + r * 0.8;
+  c.lineTo(px + r, bottom);
+  const waves = 4;
+  for (let i = 0; i < waves; i++) {
+    const x1 = px + r - (2 * r) * (i + 0.5) / waves;
+    const x2 = px + r - (2 * r) * (i + 1) / waves;
+    c.quadraticCurveTo(x1, bottom - r * 0.42, x2, bottom);
+  }
+  c.closePath();
+  c.fillStyle = color;
+  c.globalAlpha *= 0.92;
+  c.fill();
+  c.globalAlpha /= 0.92;
+  c.lineWidth = 2.5;
+  c.strokeStyle = 'rgba(0,0,0,0.35)';
+  c.stroke();
+  c.fillStyle = '#1b1b28';
+  c.beginPath(); c.arc(px - r * 0.32, py - r * 0.22, r * 0.15, 0, Math.PI * 2); c.fill();
+  c.beginPath(); c.arc(px + r * 0.32, py - r * 0.22, r * 0.15, 0, Math.PI * 2); c.fill();
+}
+
+function fallbackGift(c, px, py, size, type) {
+  const colors = ['#b06fe8', '#e0554f', '#ffd23f'];
+  const col = colors[type % 3];
+  const s = size * 0.5;
+  c.save();
+  c.translate(px, py);
+  c.beginPath();
+  c.moveTo(0, -s);
+  c.lineTo(s * 0.85, 0);
+  c.lineTo(0, s);
+  c.lineTo(-s * 0.85, 0);
+  c.closePath();
+  c.fillStyle = col;
+  c.fill();
+  c.strokeStyle = 'rgba(255,255,255,0.7)';
+  c.lineWidth = 2;
+  c.stroke();
+  c.beginPath();
+  c.moveTo(-s * 0.4, -s * 0.5);
+  c.lineTo(s * 0.4, s * 0.5);
+  c.stroke();
+  c.restore();
+}
+
+/* ============================================================
+   绘制：世界
+   ============================================================ */
+function drawLightSource(s, offX, offY, scale, alpha) {
+  const px = (s.x + 0.5) * TILE + offX;
+  const py = (s.y + 0.5) * TILE + offY;
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.globalAlpha = alpha;
+  ctx.translate(Math.round(px), Math.round(py));
+  ctx.scale(scale, scale);
+
+  const phase = s.c * 0.7 + s.r * 1.3;
+  const breathe = 0.5 + 0.5 * Math.sin(G.animT * CONFIG.lightBreatheSpeed + phase);
+  const glowR = TILE * (CONFIG.lightGlowRadius + CONFIG.lightGlowBreathe * breathe);
+  const a0 = CONFIG.lightGlowAlphaMin +
+    (CONFIG.lightGlowAlphaMax - CONFIG.lightGlowAlphaMin) * breathe;
+
+  const glow = ctx.createRadialGradient(0, 0, 2, 0, 0, glowR);
+  glow.addColorStop(0, `rgba(255,244,170,${a0})`);
+  glow.addColorStop(0.55, `rgba(255,226,110,${a0 * 0.45})`);
+  glow.addColorStop(1, 'rgba(255,210,70,0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(0, 0, glowR, 0, Math.PI * 2);
+  ctx.fill();
+
+  const im = IMG.light;
+  if (im && im.complete && im.naturalWidth > 0) {
+    const size  = im.naturalWidth  * CONFIG.charPixelScale;
+    const sizeH = im.naturalHeight * CONFIG.charPixelScale;
+    ctx.drawImage(im, Math.round(-size / 2), Math.round(-sizeH / 2), size, sizeH);
+  } else {
+    const grd = ctx.createRadialGradient(0, 0, 2, 0, 0, TILE * 0.45);
+    grd.addColorStop(0, '#fff6b0');
+    grd.addColorStop(0.5, 'rgba(255,214,60,0.85)');
+    grd.addColorStop(1, 'rgba(255,200,40,0)');
+    ctx.fillStyle = grd;
+    ctx.beginPath();
+    ctx.arc(0, 0, TILE * 0.45, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0, 0, TILE * 0.18, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff8c0';
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawNeonBorder(c, x, y, w, h, lineWidth, baseHue, hueSpan,
+                        saturation, lightness, glowBlur, coreWhite, alpha) {
+  const edges = [
+    [x,     y,     x + w, y,     0,    0.25],
+    [x + w, y,     x + w, y + h, 0.25, 0.5 ],
+    [x + w, y + h, x,     y + h, 0.5,  0.75],
+    [x,     y + h, x,     y,     0.75, 1.0 ],
+  ];
+  const makeGrad = (x1, y1, x2, y2, t0, t1) => {
+    const g = c.createLinearGradient(x1, y1, x2, y2);
+    const h0 = (baseHue + hueSpan * t0) % 360;
+    const h1 = (baseHue + hueSpan * t1) % 360;
+    g.addColorStop(0, `hsl(${h0}, ${saturation}%, ${lightness}%)`);
+    g.addColorStop(1, `hsl(${h1}, ${saturation}%, ${lightness}%)`);
+    return g;
+  };
+  c.save();
+  c.lineCap = 'round';
+
+  c.globalAlpha = 0.55 * alpha;
+  c.lineWidth = lineWidth + 4;
+  c.shadowBlur = glowBlur;
+  for (const [x1, y1, x2, y2, t0, t1] of edges) {
+    const g = makeGrad(x1, y1, x2, y2, t0, t1);
+    c.strokeStyle = g; c.shadowColor = g;
+    c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+  }
+
+  c.globalAlpha = 0.95 * alpha;
+  c.lineWidth = lineWidth;
+  c.shadowBlur = glowBlur * 0.4;
+  for (const [x1, y1, x2, y2, t0, t1] of edges) {
+    const g = makeGrad(x1, y1, x2, y2, t0, t1);
+    c.strokeStyle = g; c.shadowColor = g;
+    c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+  }
+
+  if (coreWhite > 0) {
+    c.globalAlpha = coreWhite * alpha;
+    c.lineWidth = Math.max(1.5, lineWidth * 0.35);
+    c.strokeStyle = 'rgba(255,255,255,0.95)';
+    c.shadowColor = '#ffffff';
+    c.shadowBlur = 8;
+    for (const [x1, y1, x2, y2] of edges) {
+      c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+    }
+  }
+  c.restore();
+}
+
+function drawExit() {
+  if (!G.exitActive || !G.exit) return;
+  const e = G.exit;
+  const x = e.c * TILE, y = e.r * TILE;
+  const breathe = 1 + CONFIG.exitBreatheAmount * Math.sin(G.animT * CONFIG.exitBreatheSpeed);
+
+  for (let i = 0; i < 3; i++) {
+    ctx.save();
+    ctx.shadowColor = CONFIG.exitGlowColor;
+    ctx.shadowBlur = (24 + i * 26) * CONFIG.exitGlowScale * breathe;
+    ctx.fillStyle = CONFIG.exitFillColor;
+    ctx.fillRect(x + 4, y + 4, TILE - 8, TILE - 8);
+    ctx.restore();
+  }
+
+  const im = IMG.home;
+  if (im && im.complete && im.naturalWidth > 0) {
+    const dh = TILE * 0.8;
+    const dw = dh * (im.naturalWidth / im.naturalHeight);
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(im,
+      Math.round(x + TILE / 2 - dw / 2),
+      Math.round(y + TILE / 2 - dh / 2),
+      Math.round(dw), Math.round(dh));
+    ctx.restore();
+  } else {
+    ctx.fillStyle = CONFIG.exitFillColor;
+    ctx.fillRect(x + 2, y + 2, TILE - 4, TILE - 4);
+  }
+
+  const hue = (G.animT * CONFIG.exitNeonHueSpeed) % 360;
+  const pulse = CONFIG.exitNeonPulseMin +
+    (1 - CONFIG.exitNeonPulseMin) *
+    (0.5 + 0.5 * Math.sin(G.animT * CONFIG.exitNeonPulseSpeed));
+  const inset = 2;
+  const stroke = CONFIG.exitNeonLineWidth;
+  drawNeonBorder(
+    ctx,
+    x + inset + stroke / 2,
+    y + inset + stroke / 2,
+    TILE - inset * 2 - stroke,
+    TILE - inset * 2 - stroke,
+    stroke, hue, CONFIG.exitNeonHueSpan,
+    CONFIG.exitNeonSaturation, CONFIG.exitNeonLightness,
+    CONFIG.exitNeonGlowBlur, CONFIG.exitNeonCoreWhite, pulse
+  );
+}
+
+function drawWorldStatic() {
+  drawExit();
+}
+
+function drawHitFx() {
+  for (const f of G.hitFx) {
+    const k = f.t / f.dur;
+    const cx = Math.round((f.x + 0.5) * TILE);
+    const cy = Math.round((f.y + 0.5) * TILE);
+    const r = TILE * (0.15 + k * 0.8);
+
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, 1 - k);
+
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 0.9);
+    g.addColorStop(0, `rgba(255,255,225,${(1 - k) * 0.95})`);
+    g.addColorStop(0.4, `rgba(255,225,120,${(1 - k) * 0.55})`);
+    g.addColorStop(1, 'rgba(255,190,40,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.9, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#fff6c0';
+    ctx.lineWidth = 5 * (1 - k) + 1.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#ffd23f';
+    ctx.lineWidth = 4 * (1 - k) + 1;
+    for (let i = 0; i < 6; i++) {
+      const a = i * Math.PI / 3 + k * 1.2;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(a) * r * 0.5, cy + Math.sin(a) * r * 0.5);
+      ctx.lineTo(cx + Math.cos(a) * r * 1.3, cy + Math.sin(a) * r * 1.3);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+function drawWorldEntities() {
+  const playerVisibleRadius = getPlayerLightRadius();
+
+  for (const g of G.gifts) {
+    let px, py, alpha = 1;
+    if (!g.landed) {
+      const k = Math.min(1, g.t / g.dur);
+      const arc = Math.sin(k * Math.PI) * 0.55;
+      px = (g.startC + (g.c - g.startC) * easeOutCubic(k) + 0.5) * TILE;
+      py = (g.startR + (g.r - g.startR) * easeOutCubic(k) + 0.5 - arc) * TILE;
+    } else {
+      const bob = Math.sin(G.animT * 3 + g.c) * 4;
+      px = (g.x + 0.5) * TILE;
+      py = (g.y + 0.5) * TILE + bob;
+      if (g.picked) {
+        const k = Math.min(1, g.pickT / CONFIG.giftPickTime);
+        alpha = 1 - k;
+        py -= k * 40;
+      }
+    }
+
+    const lit = G.explored[g.r][g.c] ||
+      Math.hypot(g.x - G.player.x, g.y - G.player.y) <= playerVisibleRadius + 0.6;
+    if (!lit && !g.picked) continue;
+
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.7;
+    const gr = ctx.createRadialGradient(px, py, 2, px, py, TILE * 0.75);
+    gr.addColorStop(0, 'rgba(255,240,160,0.55)');
+    gr.addColorStop(1, 'rgba(255,220,90,0)');
+    ctx.fillStyle = gr;
+    ctx.beginPath();
+    ctx.arc(px, py, TILE * 0.75, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    const ok = drawSpriteCell(ctx, 'gifts', 0, g.type, GIFT_ROWS, GIFT_COLS,
+                              px, py, TILE * 0.62, alpha, false);
+    if (!ok) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      fallbackGift(ctx, px, py, TILE * 0.7, g.type);
+      ctx.restore();
+    }
+  }
+
+  if (G.loverRevealed) {
+    const L = G.lover;
+    const px = Math.round((L.x + 0.5) * TILE);
+    let py = (L.y + 0.5) * TILE;
+
+    if (G.phase === 'exitFinal' || G.phase === 'win') {
+      py += CONFIG.exitJumpDropY;
+      py -= Math.abs(Math.sin(G.animT * CONFIG.exitJumpSpeed + 1.2)) * CONFIG.exitJumpHeight;
+    }
+    py = Math.round(py);
+
+    if (G.loverState === 'following') {
+      const pulse = 0.55 + 0.45 * Math.sin(G.animT * 3);
+      const g = ctx.createRadialGradient(px, py, 2, px, py, TILE * 1.2);
+      g.addColorStop(0, `rgba(255,140,210,${0.42 * pulse})`);
+      g.addColorStop(0.55, `rgba(255,120,200,${0.20 * pulse})`);
+      g.addColorStop(1, 'rgba(255,110,190,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(px, py, TILE * 1.2, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      const g = ctx.createRadialGradient(px, py, 2, px, py, TILE * 0.9);
+      g.addColorStop(0, 'rgba(255,170,220,0.45)');
+      g.addColorStop(1, 'rgba(255,150,210,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(px, py, TILE * 0.9, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    drawSprite(ctx, 'lover', px, py, fallbackLover, TILE * CONFIG.charScale);
+  }
+
+  for (const m of G.monsters) {
+    if (!m.discovered && m.state === 'alive') continue;
+
+    const def = GROUP_DEFS[m.group];
+    const kp = m.knockOff || 0;
+    let px = (m.x + m.knockDX * kp + 0.5) * TILE;
+    let py = (m.y + m.knockDY * kp + 0.5) * TILE;
+
+    let alpha = m.fade;
+    let scale = 1;
+
+    if (m.state === 'dying') {
+      const k = Math.min(1, m.deathT / CONFIG.monsterDeathTime);
+      const blink = (Math.sin(m.deathT * 48) > 0) ? 1 : 0.3;
+      alpha = (1 - k) * blink;
+      scale = 1 + k * 0.35;
+      py -= k * 12;
+    } else {
+      const bobY = Math.sin(m.bob) * CONFIG.ghostBobAmp;
+      py += bobY;
+    }
+
+    px = Math.round(px);
+    py = Math.round(py);
+
+    const drawH = TILE * 0.95 * scale;
+
+    const ok = drawSpriteCell(ctx, 'monsters',
+      def.row, def.col, MONSTER_ROWS, MONSTER_COLS,
+      px, py, drawH, alpha, m.flip);
+
+    if (!ok) {
+      ctx.save();
+      ctx.globalAlpha *= alpha;
+      fallbackMonster(ctx, px, py, drawH, def.color);
+      ctx.restore();
+    }
+  }
+
+  {
+    const p = G.player;
+    const px = Math.round((p.x + 0.5) * TILE + (G.playerKnock ? G.playerKnock.ox * TILE : 0));
+    let py = (p.y + 0.5) * TILE + (G.playerKnock ? G.playerKnock.oy * TILE : 0);
+
+    if (G.phase === 'exitFinal' || G.phase === 'win') {
+      py += CONFIG.exitJumpDropY;
+      py -= Math.abs(Math.sin(G.animT * CONFIG.exitJumpSpeed)) * CONFIG.exitJumpHeight;
+    }
+    py = Math.round(py);
+
+    drawSprite(ctx, 'player', px, py, fallbackPlayer, TILE * CONFIG.charScale);
+  }
+
+  drawHitFx();
+
+  ctx.save();
+  ctx.globalAlpha = 0.22;
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `17px ${FONT}`;
+  ctx.textBaseline = 'bottom';
+  ctx.textAlign = 'right';
+  ctx.fillText(CONFIG._credit, MAP_W - 8, MAP_H - 6);
+  ctx.textAlign = 'left';
+  ctx.fillText(CONFIG._versionLabel, 8, MAP_H - 6);
+  ctx.restore();
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+}
+
+/* ============================================================
+   UI
+   ============================================================ */
+function drawUI() {
+  const x = CONFIG.uiX;
+  const y = UI_Y;
+
+  const col1X = x + 110;
+  const col2X = x + 560;
+  const row1Y = y + 42;
+  const row2Y = y + 102;
+
+  const FS = 34;
+  ctx.font = `${FS}px ${FONT}`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  const gap = 26;
+
+  ctx.shadowColor = 'rgba(0,0,0,0.85)';
+  ctx.shadowBlur = 6;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 2;
+
+  {
+    const label = '冒险时间:';
+    ctx.fillStyle = CONFIG.hudTextColor;
+    ctx.fillText(label, col1X, row1Y);
+    const vx = col1X + ctx.measureText(label).width + gap;
+    const t = Math.floor(G.elapsed);
+    const mm = String(Math.floor(t / 60)).padStart(2, '0');
+    const ss = String(t % 60).padStart(2, '0');
+    ctx.fillStyle = CONFIG.hudYellow;
+    ctx.fillText(`${mm}:${ss}`, vx, row1Y);
+  }
+
+  {
+    const label = '信物:';
+    ctx.fillStyle = CONFIG.hudTextColor;
+    ctx.fillText(label, col2X, row1Y);
+    const vx = col2X + ctx.measureText(label).width + gap;
+    const r = 14;
+    const step = 42;
+    for (let i = 0; i < 3; i++) {
+      const cx = vx + r + i * step;
+      const cy = row1Y;
+      if (i < G.collected) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = CONFIG.hudYellow;
+        ctx.fill();
+      } else {
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = '#000000';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx, cy, r - 3.5, 0, Math.PI * 2);
+        ctx.strokeStyle = CONFIG.hudYellow;
+        ctx.lineWidth = 3.5;
+        ctx.stroke();
+      }
+    }
+  }
+
+  {
+    const label = '恋人:';
+    ctx.fillStyle = CONFIG.hudTextColor;
+    ctx.fillText(label, col1X, row2Y);
+    const vx = col1X + ctx.measureText(label).width + gap;
+
+    let txt, col;
+    if (!G.loverRevealed) {
+      txt = '在等你';
+      col = CONFIG.hudTextColor;
+    } else if (G.loverState === 'reluctant') {
+      txt = '不情不愿';
+      col = CONFIG.hudPink;
+    } else if (G.loverState === 'following') {
+      txt = '跟随你';
+      col = CONFIG.hudYellow;
+    } else {
+      txt = '在等你';
+      col = CONFIG.hudTextColor;
+    }
+    ctx.fillStyle = col;
+    ctx.fillText(txt, vx, row2Y);
+  }
+
+  {
+    const label = '击杀怪物:';
+    ctx.fillStyle = CONFIG.hudTextColor;
+    ctx.fillText(label, col2X, row2Y);
+    const vx = col2X + ctx.measureText(label).width + gap;
+    ctx.fillStyle = CONFIG.hudYellow;
+    ctx.font = `${FS}px ${FONT}`;
+    ctx.fillText(`${G.kills}/${CONFIG.monsterTotal}`, vx, row2Y);
+  }
+
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+}
+
+function drawBackButton() {
+  const w = CONFIG.backW;
+  const h = CONFIG.backH;
+  const x = 0, y = 0;
+  const im = IMG.back;
+  const pressed = mouse.down &&
+    mouse.x >= x && mouse.x <= x + w &&
+    mouse.y >= y && mouse.y <= y + h;
+
+  if (im && im.complete && im.naturalWidth > 0) {
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.globalAlpha = pressed ? 0.7 : 1.0;
+    ctx.drawImage(im, x, y, w, h);
+    ctx.restore();
+  } else {
+    ctx.save();
+    ctx.globalAlpha = pressed ? 0.75 : 1.0;
+    ctx.fillStyle = 'rgba(255,210,63,0.18)';
+    roundRectPath(ctx, x + 6, y + 6, w - 12, h - 12, 12);
+    ctx.fill();
+    ctx.strokeStyle = '#ffd23f';
+    ctx.lineWidth = 3;
+    roundRectPath(ctx, x + 6, y + 6, w - 12, h - 12, 12);
+    ctx.stroke();
+    ctx.fillStyle = '#ffd23f';
+    ctx.font = `28px ${FONT}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('退出', x + w / 2, y + h / 2);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.restore();
+  }
+
+  G.uiButtons.push({
+    x: x, y: y, w: w, h: h,
+    action: function () {
+      G.exited = true;
+      try { window.close(); } catch (e) {}
+    }
+  });
+}
+
+function drawButtonRect(rect, text, fontSize) {
+  const hovered = mouse.x >= rect.x && mouse.x <= rect.x + rect.w &&
+                  mouse.y >= rect.y && mouse.y <= rect.y + rect.h;
+  ctx.font = `${fontSize}px ${FONT}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  ctx.fillStyle = hovered ? 'rgba(255,210,63,0.34)' : 'rgba(255,210,63,0.14)';
+  roundRectPath(ctx, rect.x, rect.y, rect.w, rect.h, 16);
+  ctx.fill();
+
+  ctx.strokeStyle = hovered ? '#ffd23f' : '#c89b2b';
+  ctx.lineWidth = 4;
+  roundRectPath(ctx, rect.x, rect.y, rect.w, rect.h, 16);
+  ctx.stroke();
+
+  ctx.fillStyle = hovered ? '#fff3c4' : CONFIG.overlayTextColor;
+  ctx.fillText(text, rect.x + rect.w / 2, rect.y + rect.h / 2);
+
+  G.uiButtons.push(rect);
+
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+}
+
+function drawOverlayButtonRow(topY, fontSize, alpha, scale, anchorY) {
+  const a = Math.max(0, Math.min(1, alpha == null ? 1 : alpha));
+  const s = (scale == null || scale <= 0.001) ? 1 : scale;
+  const aY = (anchorY == null) ? (CSS_H / 2) : anchorY;
+
+  const screenTopY = aY + (topY - aY) * s;
+  const screenFontSize = Math.max(1, fontSize * 1.5 * s);
+
+  ctx.save();
+  ctx.globalAlpha = a;
+
+  ctx.font = `${screenFontSize}px ${FONT}`;
+  const t1 = '重新开始';
+  const t2 = '退出游戏';
+  const pad = 80 * s;
+  const w1 = ctx.measureText(t1).width + pad;
+  const w2 = ctx.measureText(t2).width + pad;
+  const h  = screenFontSize * 1.65;
+  const gap = 44 * s;
+  const cx = CSS_W / 2;
+
+  const y1 = screenTopY;
+  const y2 = screenTopY + h + gap;
+
+  const rect1 = { x: cx - w1 / 2, y: y1, w: w1, h: h, action: function () { newGame(); } };
+  const rect2 = { x: cx - w2 / 2, y: y2, w: w2, h: h, action: function () { G.exited = true; } };
+
+  drawButtonRect(rect1, t1, screenFontSize);
+  drawButtonRect(rect2, t2, screenFontSize);
+
+  ctx.restore();
+}
+
+function drawEndIcon(key, centerX, centerY, flip, fallbackGlyph, fallbackColor, fallbackSize) {
+  const im = IMG[key];
+  if (im && im.complete && im.naturalWidth > 0) {
+    const w = im.naturalWidth  * CONFIG.pixelScale;
+    const h = im.naturalHeight * CONFIG.pixelScale;
+    const cxI = Math.round(centerX);
+    const cyI = Math.round(centerY);
+    const dxI = Math.round(-w / 2);
+    const dyI = Math.round(-h / 2);
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.translate(cxI, cyI);
+    if (flip) ctx.scale(-1, 1);
+    ctx.drawImage(im, dxI, dyI, w, h);
+    ctx.restore();
+    return;
+  }
+  const fs = fallbackSize || 58;
+  ctx.save();
+  ctx.font = `${fs}px ${FONT}`;
+  drawGlyphCentered(ctx, fallbackGlyph, centerX, centerY, fallbackColor);
+  ctx.restore();
+}
+
+function drawEndScreen() {
+  const cx = CONFIG.canvasW / 2;
+  const cy = CONFIG.canvasH / 2;
+  const cyCenter = cy - CONFIG.overlayShiftY;
+
+  ctx.fillStyle = 'rgba(0,0,0,0.72)';
+  ctx.fillRect(0, 0, CONFIG.canvasW, CONFIG.canvasH);
+  drawConfetti();
+
+  const t = Math.min(1, G.endAnimT / CONFIG.overlayAnimDuration);
+  const scale = easeOutBack(t);
+  const breathe = 1 + CONFIG.overlayBreatheAmp * Math.sin(G.animT * CONFIG.overlayBreatheSpeed);
+  const combinedScale = scale * breathe;
+
+  const sideKey  = 'fireworks';
+  const sideW    = pxW(sideKey, 90);
+  const sidePad  = CONFIG.endSidePad;
+  const maxMainW = CSS_W - 2 * (sidePad + sideW) - 40;
+
+  const mainKey = 'good';
+  const mainImg = IMG[mainKey];
+  let mainW = 0, mainH = 0;
+  if (mainImg && mainImg.complete && mainImg.naturalWidth > 0) {
+    mainW = mainImg.naturalWidth  * CONFIG.pixelScale;
+    mainH = mainImg.naturalHeight * CONFIG.pixelScale;
+    if (mainW > maxMainW) {
+      const k = maxMainW / mainW;
+      mainW *= k; mainH *= k;
+    }
+  } else {
+    mainW = Math.min(620, maxMainW);
+    mainH = 100;
+  }
+
+  let infoY, btnTopY;
+
+  ctx.save();
+  ctx.translate(cx, cyCenter);
+  ctx.scale(combinedScale, combinedScale);
+  ctx.translate(-cx, -cyCenter);
+  ctx.imageSmoothingEnabled = false;
+
+  if (mainImg && mainImg.complete && mainImg.naturalWidth > 0) {
+    ctx.drawImage(mainImg,
+      Math.round(cx - mainW / 2),
+      Math.round(cyCenter - mainH / 2),
+      Math.round(mainW), Math.round(mainH));
+  } else {
+    ctx.font = `72px ${FONT}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = CONFIG.winTitleColor;
+    ctx.shadowColor = 'rgba(0,0,0,0.8)';
+    ctx.shadowBlur = 12;
+    ctx.fillText('斩怪归途 · 圆满', cx, cyCenter);
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+  }
+
+  const leftX  = cx - mainW / 2 - sidePad - sideW / 2;
+  const rightX = cx + mainW / 2 + sidePad + sideW / 2;
+  const iconY  = cyCenter - CONFIG.fireworksShiftY;
+
+  drawEndIcon(sideKey, leftX,  iconY, true,  '🎉', CONFIG.winTitleColor, 86);
+  drawEndIcon(sideKey, rightX, iconY, false, '🎉', CONFIG.winTitleColor, 86);
+
+  infoY = cyCenter + mainH / 2 + CONFIG.endInfoGap;
+
+  ctx.fillStyle = CONFIG.overlayTextColor;
+  ctx.font = `40px ${FONT}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(0,0,0,0.9)';
+  ctx.shadowBlur = 10;
+  ctx.shadowOffsetY = 3;
+
+  const tt = Math.floor(G.elapsed);
+  const mm = String(Math.floor(tt / 60)).padStart(2, '0');
+  const ss = String(tt % 60).padStart(2, '0');
+
+  ctx.fillText(`冒险时间 ${mm}:${ss}　击杀怪物 ${G.kills}/${CONFIG.monsterTotal}`,
+               cx, infoY);
+
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+
+  btnTopY = infoY + 30 + CONFIG.endButtonGap;
+
+  ctx.restore();
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+
+  drawOverlayButtonRow(btnTopY, 32, t, combinedScale, cyCenter);
+}
+
+function drawOverlay() {
+  const cx = CONFIG.canvasW / 2;
+  const cy = CONFIG.canvasH / 2;
+  const cyCenter = cy - CONFIG.overlayShiftY;
+
+  if (G.exited) {
+    ctx.fillStyle = 'rgba(0,0,0,0.78)';
+    ctx.fillRect(0, 0, CONFIG.canvasW, CONFIG.canvasH);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = CONFIG.overlayTextColor;
+    ctx.font = `64px ${FONT}`;
+    ctx.fillText('已退出游戏', cx, cy - 240);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+
+    const t = Math.min(1, G.endAnimT / CONFIG.overlayAnimDuration);
+    drawOverlayButtonRow(cy - 60, 32, t, 1, cyCenter);
+    return;
+  }
+
+  if (G.phase === 'win') drawEndScreen();
+}
+
+/* ============================================================
+   渲染主循环
+   ============================================================ */
+function render() {
+  G.uiButtons = [];
+
+  ctx.imageSmoothingEnabled = false;
+
+  if (pendingSceneRebuild && G.grid) {
+    pendingSceneRebuild = false;
+    buildSceneCanvas();
+    memDirty = true;
+    lightDirty = true;
+  }
+
+  ctx.fillStyle = '#1a0f06';
+  ctx.fillRect(0, 0, CSS_W, CSS_H);
+
+  if (decorDirty) {
+    buildDecorLayer();
+    decorDirty = false;
+  }
+  ctx.drawImage(decorCanvas, 0, 0);
+
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(CONFIG.mapX, CONFIG.mapY, MAP_W, MAP_H);
+
+  if (G.grid) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(CONFIG.mapX, CONFIG.mapY, MAP_W, MAP_H);
+    ctx.clip();
+    ctx.drawImage(memCanvas, CONFIG.mapX, CONFIG.mapY);
+
+    /* ★ 优化：只在脏标记时重建记忆层和光照层 */
+    if (memDirty) {
+      memDirty = false;
+      buildMemoryLayer();
+      lightDirty = true;
+    }
+
+    if (lightDirty) {
+      lightDirty = false;
+      buildMask();
+      buildLightLayer();
+    }
+
+    ctx.drawImage(lightCanvas, CONFIG.mapX, CONFIG.mapY);
+    ctx.translate(CONFIG.mapX, CONFIG.mapY);
+    drawWorldStatic();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(CONFIG.mapX, CONFIG.mapY);
+    drawWorldEntities();
+    ctx.restore();
+  }
+
+  drawUI();
+  drawBackButton();
+  drawDialogBubble();
+  drawOverlay();
+}
+
+let lastTime = 0;
+/* ★ 优化：dt 上限 0.05 → 0.1，掉帧时移动速度不变慢 */
+function loop(ts) {
+  if (!lastTime) lastTime = ts;
+  let dt = (ts - lastTime) / 1000;
+  lastTime = ts;
+  if (dt > 0.1) dt = 0.1;
+
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+
+newGame();
+requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>
